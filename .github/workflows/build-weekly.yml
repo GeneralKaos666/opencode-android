@@ -239,7 +239,15 @@ jobs:
           export PATH="$HOME/.bun/bin:$PATH"
           cd upstream || exit
           bun install --os="*" --cpu="*"
-          ls -d node_modules/.bun/@opentui+core-linux-arm64-musl@*/node_modules/@opentui/core-linux-arm64-musl
+          if ! ls -d node_modules/.bun/@opentui+core-linux-arm64-musl@*/node_modules/@opentui/core-linux-arm64-musl 2>/dev/null; then
+            TUIVER=$(python3 -c "import json; print(json.load(open('packages/core/package.json'))['dependencies']['@opentui/core'])")
+            echo "bun skipped opentui musl package; fetching @opentui/core-linux-arm64-musl@$TUIVER"
+            mkdir -p node_modules/@opentui/core-linux-arm64-musl
+            curl -fsSL "https://registry.npmjs.org/@opentui/core-linux-arm64-musl/-/core-linux-arm64-musl-${TUIVER}.tgz" | \
+              tar xz -C node_modules/@opentui/core-linux-arm64-musl --strip-components=1
+          fi
+          ls -d node_modules/.bun/@opentui+core-linux-arm64-musl@*/node_modules/@opentui/core-linux-arm64-musl 2>/dev/null || \
+            ls -d node_modules/@opentui/core-linux-arm64-musl
           # Bun may skip os:android optionals even with --os="*"; fetch the
           # exact tarball from the registry so the bundler can resolve it.
           if ! ls -d node_modules/.bun/@parcel+watcher-android-arm64@*/node_modules/@parcel/watcher-android-arm64 2>/dev/null && \
