@@ -277,7 +277,11 @@ jobs:
         run: |
           MUSL_PKG=$(ls -d upstream/node_modules/.bun/@opentui+core-linux-arm64-musl@*/node_modules/@opentui/core-linux-arm64-musl 2>/dev/null || \
             ls -d upstream/node_modules/@opentui/core-linux-arm64-musl)
-          test -n "$MUSL_PKG" && test -f "$MUSL_PKG/libopentui.so" || { echo "missing opentui musl pkg"; ls -la upstream/node_modules/@opentui/ 2>&1 | head -10; exit 1; }
+          if [ -z "$MUSL_PKG" ] || [ ! -f "$MUSL_PKG/libopentui.so" ]; then
+            echo "missing opentui musl pkg" >&2
+            find upstream/node_modules/@opentui -maxdepth 1 -print 2>/dev/null | head -10
+            exit 1
+          fi
           cp -v out/libopentui.so "$MUSL_PKG/libopentui.so"
           bash scripts/check-elf.sh --no-errno-location "$MUSL_PKG/libopentui.so"
 
@@ -289,12 +293,20 @@ jobs:
         run: |
           PTY_PKG=$(ls -d upstream/node_modules/.bun/@opencode-ai+pty-linux-arm64-musl@*/node_modules/@opencode-ai/pty-linux-arm64-musl 2>/dev/null || \
             ls -d upstream/node_modules/@opencode-ai/pty-linux-arm64-musl)
-          test -n "$PTY_PKG" && test -f "$PTY_PKG/bin/opencode-pty" || { echo "missing pty musl pkg"; ls -la upstream/node_modules/@opencode-ai/ 2>&1 | head -10; exit 1; }
+          if [ -z "$PTY_PKG" ] || [ ! -f "$PTY_PKG/bin/opencode-pty" ]; then
+            echo "missing pty musl pkg" >&2
+            find upstream/node_modules/@opencode-ai -maxdepth 1 -print 2>/dev/null | head -10
+            exit 1
+          fi
           cp -v out/opencode-pty "$PTY_PKG/bin/opencode-pty"
           chmod 755 "$PTY_PKG/bin/opencode-pty"
           RUSTPTY_DST=$(ls upstream/node_modules/.bun/bun-pty@*/node_modules/bun-pty/rust-pty/target/release/librust_pty_arm64.so 2>/dev/null || \
             ls upstream/node_modules/bun-pty/rust-pty/target/release/librust_pty_arm64.so)
-          test -n "$RUSTPTY_DST" || { echo "missing librust_pty_arm64.so"; find upstream/node_modules -name 'librust_pty_arm64.so' 2>&1 | head -5; exit 1; }
+          if [ -z "$RUSTPTY_DST" ]; then
+            echo "missing librust_pty_arm64.so" >&2
+            find upstream/node_modules -name 'librust_pty_arm64.so' 2>/dev/null | head -5
+            exit 1
+          fi
           cp -v out/librust_pty_arm64.so "$RUSTPTY_DST"
           bash scripts/check-elf.sh --no-glibc "$RUSTPTY_DST"
 
