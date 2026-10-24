@@ -1,5 +1,5 @@
 diff --git a/packages/cli/script/build.ts b/packages/cli/script/build.ts
-index f55d890..e89d3ed 100755
+index a84cb54..f8ce830 100755
 --- a/packages/cli/script/build.ts
 +++ b/packages/cli/script/build.ts
 @@ -1,6 +1,7 @@
@@ -10,7 +10,7 @@ index f55d890..e89d3ed 100755
  import { mkdir, rm } from "fs/promises"
  import path from "path"
  import { Script } from "@opencode/script"
-@@ -33,7 +34,7 @@ const releaseAssets = new Map<string, Promise<Map<string, string>>>()
+@@ -37,7 +38,7 @@ const releaseAssets = new Map<string, Promise<Map<string, string>>>()
  const allTargets: {
    os: string
    arch: "arm64" | "x64"
@@ -19,7 +19,7 @@ index f55d890..e89d3ed 100755
    avx2?: false
  }[] = [
    { os: "linux", arch: "arm64" },
-@@ -42,6 +43,7 @@ const allTargets: {
+@@ -46,6 +47,7 @@ const allTargets: {
    { os: "linux", arch: "arm64", abi: "musl" },
    { os: "linux", arch: "x64", abi: "musl" },
    { os: "linux", arch: "x64", abi: "musl", avx2: false },
@@ -27,7 +27,7 @@ index f55d890..e89d3ed 100755
    { os: "darwin", arch: "arm64" },
    { os: "darwin", arch: "x64" },
    { os: "darwin", arch: "x64", avx2: false },
-@@ -107,12 +109,19 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
+@@ -140,12 +142,19 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
        )
      },
    }
@@ -49,7 +49,8 @@ index f55d890..e89d3ed 100755
          loader: "js",
        }))
      },
-@@ -192,7 +201,11 @@
+@@ -196,8 +205,12 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
+       ...(highlights ? { OPENCODE_RELEASE_HIGHLIGHTS: JSON.stringify(highlights) } : {}),
        OPENCODE_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
        // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
 -      FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
@@ -63,7 +64,7 @@ index f55d890..e89d3ed 100755
      },
    })
  
-@@ -265,3 +278,19 @@ function targetName(item: (typeof allTargets)[number]) {
+@@ -307,3 +320,19 @@ function targetName(item: (typeof allTargets)[number]) {
      .filter(Boolean)
      .join("-")
  }
@@ -84,7 +85,7 @@ index f55d890..e89d3ed 100755
 +  return flat
 +}
 diff --git a/packages/cli/script/opencode-pty.ts b/packages/cli/script/opencode-pty.ts
-index ae3ec30..becddd5 100644
+index 912174f..d9f39e7 100644
 --- a/packages/cli/script/opencode-pty.ts
 +++ b/packages/cli/script/opencode-pty.ts
 @@ -12,7 +12,7 @@ export type OpencodePtyAsset = {
@@ -97,7 +98,7 @@ index ae3ec30..becddd5 100644
  
  const core = createRequire(path.resolve(import.meta.dirname, "../../core/package.json"))
 @@ -22,7 +22,11 @@ export async function resolveOpencodePty(target: Target): Promise<OpencodePtyAss
-   if (target.platform !== "darwin" && target.platform !== "linux") return undefined
+   if (target.platform !== "darwin" && target.platform !== "linux" && target.platform !== "win32") return undefined
    if (target.arch !== "arm64" && target.arch !== "x64") return undefined
  
 -  const suffix = [target.platform, target.arch, target.platform === "linux" ? (target.libc ?? "glibc") : undefined]
