@@ -96,7 +96,7 @@ EOF
 echo "==> zig build"
 export BIONIC_SYSROOT_INC="$BIONIC_INC"
 export ANDROID_NDK_HOME="$NDK_DIR"
-zig build --libc "$WORK/android-libc.txt" -Dlibrary-target=aarch64-linux-android -Doptimize=ReleaseSafe --summary all
+zig build --libc "$WORK/android-libc.txt" -Dlibrary-target=aarch64-linux-android -Doptimize=ReleaseFast --summary all
 
 echo "==> install"
 LIB_SO="$(find "$SRC/lib" -name libopentui.so | head -n 1)"
