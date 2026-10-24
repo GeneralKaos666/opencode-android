@@ -45,9 +45,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       PAGES_BRANCH: gh-pages
-      # pool: store .debs on the branch. none: index only (pool/… is served
-      # by the redirect worker in apt-worker/ — live, so this stays none).
-      APT_POOL_MODE: none
+      # pool: store .debs on the branch (self-contained, served directly by
+      # GitHub Pages). none: index only, redirects pool/… via apt-worker/.
+      APT_POOL_MODE: pool
     steps:
       - name: Checkout packaging scripts
         uses: actions/checkout@v4

@@ -23,7 +23,7 @@ from just `opencode` — no `opencode2` name, no symlink.
   `aarch64`; there is no 32-bit build).
 - **~500 MB free** while installing (~200 MB once installed: the
   single-binary build plus its `ripgrep`/`libc++` dependencies).
-- **Network access** to `opencode-android-apt.YOUR-ACCOUNT.workers.dev`
+- **Network access** to `generalkaos666.github.io/opencode-android`
   (package repository), `raw.githubusercontent.com` and `github.com`
   (installer/key fallback), plus your provider's API endpoints at runtime.
 - No root needed. The installer fetches its own dependencies (`curl`;
@@ -43,7 +43,7 @@ opencode        # TUI
 ```
 
 The installer registers the signed APT repository
-(`https://opencode-android-apt.YOUR-ACCOUNT.workers.dev`), installs the `opencode2`
+(`https://generalkaos666.github.io/opencode-android`), installs the `opencode2`
 package with the system package manager (linking `opencode` → `opencode2`),
 and verifies with `opencode2 --version`. Later updates arrive through
 `pkg upgrade`, like any other program.
@@ -113,9 +113,9 @@ pkg upgrade            # updates opencode2 together with everything else
 Manual setup (if you ever need to redo it by hand — the installer does this):
 
 ```sh
-curl -fsSL https://opencode-android-apt.YOUR-ACCOUNT.workers.dev/opencode-android.gpg \
+curl -fsSL https://generalkaos666.github.io/opencode-android/opencode-android.gpg \
   -o "$PREFIX/etc/apt/trusted.gpg.d/opencode-android.gpg"
-echo "deb https://opencode-android-apt.YOUR-ACCOUNT.workers.dev stable main" \
+echo "deb https://generalkaos666.github.io/opencode-android stable main" \
   > "$PREFIX/etc/apt/sources.list.d/opencode-android.list"
 pkg update
 pkg install opencode2
@@ -123,7 +123,7 @@ pkg install opencode2
 
 The repository is published from every `*-android` release by
 `.github/workflows/apt-repo.yml` (see `apt/README.md`); `InRelease` is
-signed with `EA8359E6A86DA8CBCE556301BE6950114D74B7B5`
+signed with `0212C5C1A9B09BE76DEC928E83F5DEDF46D11B7F`
 (`opencode-android <noreply@example.com>`).
 
 Prefer the legacy path? `install.sh --zip` downloads the release zip

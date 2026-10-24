@@ -1,5 +1,10 @@
 # APT pool redirect worker (Cloudflare)
 
+> **Status:** not in use. This repo now runs `APT_POOL_MODE: pool`, so
+> `.deb`s are committed straight to `gh-pages` and served by GitHub Pages.
+> This worker is the optional metadata-only alternative (302-redirects
+> `pool/…/*.deb` to the release asset) if you ever flip back to `none`.
+
 `apt` only fetches files from inside its own repository root, so without
 this worker every `.deb` (~57 MB each) would have to be committed to the
 `gh-pages` branch. Instead the branch holds only metadata (KBs) and this

@@ -1,4 +1,4 @@
-# APT repository (`https://opencode-android-apt.YOUR-ACCOUNT.workers.dev`)
+# APT repository (`https://generalkaos666.github.io/opencode-android`)
 
 This directory holds the *client-side* files for the Termux package-manager
 install path; the published repository itself lives on the `gh-pages` branch
@@ -14,7 +14,7 @@ install path; the published repository itself lives on the `gh-pages` branch
 Signing key fingerprint:
 
 ```
-EA8359E6A86DA8CBCE556301BE6950114D74B7B5
+0212C5C1A9B09BE76DEC928E83F5DEDF46D11B7F
 uid: opencode-android <noreply@example.com>
 ```
 

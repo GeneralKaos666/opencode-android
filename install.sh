@@ -5,7 +5,7 @@
 #   bash <(curl -fsSL https://raw.githubusercontent.com/GeneralKaos666/opencode-android/master/install.sh)
 #
 # Default: registers the signed APT repository
-# (https://opencode-android-apt.YOUR-ACCOUNT.workers.dev) and installs/upgrades the
+# (https://generalkaos666.github.io/opencode-android) and installs/upgrades the
 # opencode2 package with the system package manager. Later updates then
 # arrive through `pkg upgrade`, like any other program.
 #
@@ -23,7 +23,7 @@
 set -e
 
 REPO="GeneralKaos666/opencode-android"
-APT_ROOT="https://opencode-android-apt.YOUR-ACCOUNT.workers.dev"
+APT_ROOT="https://generalkaos666.github.io/opencode-android"
 # The key URL is overridable for tests; the raw.githubusercontent copy is the
 # fallback for devices reaching GitHub before Pages serves the branch.
 APT_KEY_URL="${APT_KEY_URL:-$APT_ROOT/opencode-android.gpg}"
