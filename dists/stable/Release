@@ -2,19 +2,19 @@ Origin: opencode-android
 Label: opencode-android
 Suite: stable
 Codename: stable
-Date: Sat, 24 Oct 2026 10:31:06 UTC
+Date: Sat, 24 Oct 2026 11:06:33 UTC
 Architectures: aarch64
 Components: main
 Description: OpenCode for Android/Termux
 MD5Sum:
-  970dca0e5b8f25ea7f849b596c0c138c              713 main/binary-aarch64/Packages
-  70d4a76efd370547444280f6a2d3188c              480 main/binary-aarch64/Packages.gz
-  5e9160b30f486e16c013b8ffa17a3317              544 main/binary-aarch64/Packages.xz
+  d0a4524f48fc1f3515062dd56e680f11              713 main/binary-aarch64/Packages
+  7c0ab841c538a47ce47625d81ffe5228              480 main/binary-aarch64/Packages.gz
+  aebec6ffde5601ded66d0a3959865bd1              548 main/binary-aarch64/Packages.xz
 SHA1:
-  fc73089db9b58ab238161965d2fd56be428b865a              713 main/binary-aarch64/Packages
-  2a4ad24e2e9a6fa1f294e1a377502ad25ac31f90              480 main/binary-aarch64/Packages.gz
-  47af496d12a8cd5e892bd5763d894f71bde59dde              544 main/binary-aarch64/Packages.xz
+  cbecad8855f6b1b55e6568c916fb237d0b564054              713 main/binary-aarch64/Packages
+  1cc8d2941c994772f229e724f565e9b10acaaac4              480 main/binary-aarch64/Packages.gz
+  b8d8e57c2e7328f950e24425ab69c50434644c1e              548 main/binary-aarch64/Packages.xz
 SHA256:
-  05f6ac68eb3376ab70808ca3c37b168f744182e378af0a9ec69423efb1997be8              713 main/binary-aarch64/Packages
-  37007a01d74362e79477887e4d5a61701e03ef57d5e0ba198bc2dbad73798f45              480 main/binary-aarch64/Packages.gz
-  c6b4535dec3615ce674876cadfe916b7d4801f735e94f2a4a41cf1892ea232f1              544 main/binary-aarch64/Packages.xz
+  bf96bfb746b9cadd36d8964be42a88715446bc97ea38201e9006e1aa673d79a0              713 main/binary-aarch64/Packages
+  1f10bb7c1bfd171def23c3a4dcb2afc137b34df408a9034c944d7dedcf6fca47              480 main/binary-aarch64/Packages.gz
+  a2ee17002550c7c2936ae9c688c9197beb438f913cb9c4cc39675fcc1cbbe9bc              548 main/binary-aarch64/Packages.xz
