@@ -45,16 +45,26 @@ cat > "$BIONIC_INC/__opentui/miniaudio_shimmed.h" <<'EOF'
 #endif
 #include "../miniaudio.h"
 EOF
-cat > "$BIONIC_INC/__opentui/Yoga_shimmed.h" <<'EOF'
+cat > "$BIONIC_INC/__opentui/yoga_bridge_shimmed.h" <<'EOF'
 #define _Nullable
 #define _Nonnull
 #ifndef __ANDROID_MIN_SDK_VERSION__
 #define __ANDROID_MIN_SDK_VERSION__ 29
 #endif
-#include "../yoga/yoga/Yoga.h"
+#include "../yoga-bridge.h"
+EOF
+cat > "$BIONIC_INC/__opentui/context_abi_shimmed.h" <<'EOF'
+#define _Nullable
+#define _Nonnull
+#ifndef __ANDROID_MIN_SDK_VERSION__
+#define __ANDROID_MIN_SDK_VERSION__ 29
+#endif
+#include "../opentui.h"
 EOF
 cp -f "$SRC/src/vendor/miniaudio/miniaudio.h" "$BIONIC_INC/miniaudio.h"
-ls "$BIONIC_INC/miniaudio.h"
+cp -f "$SRC/src/yoga-bridge.h" "$BIONIC_INC/yoga-bridge.h"
+cp -f "$SRC/include/opentui.h" "$BIONIC_INC/opentui.h"
+ls "$BIONIC_INC/miniaudio.h" "$BIONIC_INC/yoga-bridge.h" "$BIONIC_INC/opentui.h"
 
 echo "==> zig deps"
 cd "$SRC"

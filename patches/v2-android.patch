@@ -1,5 +1,5 @@
 diff --git a/packages/native/build.zig b/packages/native/build.zig
-index b226da7..5afd8c4 100644
+index b249205..f436d04 100644
 --- a/packages/native/build.zig
 +++ b/packages/native/build.zig
 @@ -367,8 +367,11 @@ fn addNativeAudioDependencies(
@@ -16,7 +16,7 @@ index b226da7..5afd8c4 100644
          },
          else => {},
      }
-@@ -399,26 +402,58 @@ fn ghosttyVtAvailable(target: std.Build.ResolvedTarget) bool {
+@@ -404,26 +407,59 @@ fn ghosttyVtAvailable(target: std.Build.ResolvedTarget) bool {
      };
  }
  
@@ -48,7 +48,6 @@ index b226da7..5afd8c4 100644
 +    const bionic_inc = bionicSysrootInclude(b);
      const miniaudio_translate = b.addTranslateC(.{
 -        .root_source_file = b.path("src/vendor/miniaudio/miniaudio.h"),
-+        // Bionic: shimmed entry point inside the merged sysroot (nulls nullability macros)
 +        .root_source_file = if (bionic_inc != null)
 +            .{ .cwd_relative = b.fmt("{s}/__opentui/miniaudio_shimmed.h", .{bionic_inc.?}) }
 +        else
@@ -65,32 +64,58 @@ index b226da7..5afd8c4 100644
  
      const yoga_dep = b.dependency("yoga", .{});
      const yoga_translate = b.addTranslateC(.{
--        .root_source_file = yoga_dep.path("yoga/Yoga.h"),
+-        .root_source_file = b.path("src/yoga-bridge.h"),
 +        .root_source_file = if (bionic_inc != null)
-+            .{ .cwd_relative = b.fmt("{s}/__opentui/Yoga_shimmed.h", .{bionic_inc.?}) }
++            .{ .cwd_relative = b.fmt("{s}/__opentui/yoga_bridge_shimmed.h", .{bionic_inc.?}) }
 +        else
-+            yoga_dep.path("yoga/Yoga.h"),
++            b.path("src/yoga-bridge.h"),
          .target = target,
          .optimize = optimize,
      });
-+    if (bionic_inc) |inc| yoga_translate.addIncludePath(.{ .cwd_relative = inc });
++    if (bionic_inc) |inc| {
++        yoga_translate.addIncludePath(.{ .cwd_relative = inc });
++    }
      yoga_translate.addIncludePath(yoga_dep.path(""));
      module.addImport("yoga", yoga_translate.createModule());
+     addContextABIHeader(b, module, optimize, target);
+@@ -435,11 +471,18 @@ fn addContextABIHeader(
+     optimize: std.builtin.OptimizeMode,
+     target: std.Build.ResolvedTarget,
+ ) void {
++    const bionic_inc = bionicSysrootInclude(b);
+     const header = b.addTranslateC(.{
+-        .root_source_file = b.path("include/opentui.h"),
++        .root_source_file = if (bionic_inc != null)
++            .{ .cwd_relative = b.fmt("{s}/__opentui/context_abi_shimmed.h", .{bionic_inc.?}) }
++        else
++            b.path("include/opentui.h"),
+         .target = target,
+         .optimize = optimize,
+     });
++    if (bionic_inc) |inc| {
++        header.addIncludePath(.{ .cwd_relative = inc });
++    }
+     module.addImport("context_abi_c", header.createModule());
  }
-@@ -432,6 +467,8 @@ fn applyDependencies(
+ 
+@@ -451,6 +494,12 @@ fn applyDependencies(
+     target: std.Build.ResolvedTarget,
      build_options: *std.Build.Step.Options,
  ) void {
++    if (bionicSysrootInclude(b)) |inc| {
++        module.addSystemIncludePath(.{ .cwd_relative = inc });
++    }
++    if (bionicSysrootLib(b, target)) |lib| {
++        module.addLibraryPath(.{ .cwd_relative = lib });
++    }
      module.addOptions("build_options", build_options);
-+    if (bionicSysrootInclude(b)) |inc| module.addSystemIncludePath(.{ .cwd_relative = inc });
-+    if (bionicSysrootLib(b, target)) |lib| module.addLibraryPath(.{ .cwd_relative = lib });
      addTranslatedCImports(b, module, optimize, target);
  
-     const ghostty_vt_available = ghosttyVtAvailable(target);
 diff --git a/packages/native/src/clipboard/host.zig b/packages/native/src/clipboard/host.zig
-index 6305136..4ede18d 100644
+index 1edeab4..20ccfc6 100644
 --- a/packages/native/src/clipboard/host.zig
 +++ b/packages/native/src/clipboard/host.zig
-@@ -99,10 +99,16 @@ const ErrorCode = enum(u32) {
+@@ -100,10 +100,16 @@ const ErrorCode = enum(u32) {
  };
  
  extern "c" fn pthread_mach_thread_np(thread: std.c.pthread_t) std.c.mach_port_t;
@@ -107,14 +132,3 @@ index 6305136..4ede18d 100644
      return switch (builtin.os.tag) {
          .linux => switch (pthread_tryjoin_np(thread.getHandle(), null)) {
              0 => true,
-diff --git a/packages/native/src/android-translate-c-shim.h b/packages/native/src/android-translate-c-shim.h
-new file mode 100644
-index 0000000..1d360e3
---- /dev/null
-+++ b/packages/native/src/android-translate-c-shim.h
-@@ -0,0 +1,5 @@
-+// Force-included before any bionic header: Zig's translate-c cannot parse
-+// clang nullability annotations (_Nullable/_Nonnull on array params), so we
-+// expand them to nothing. Harmless for real C compilation (clang knows them).
-+#define _Nullable
-+#define _Nonnull
