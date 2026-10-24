@@ -1,0 +1,20 @@
+Origin: opencode-android
+Label: opencode-android
+Suite: stable
+Codename: stable
+Date: Sat, 24 Oct 2026 10:31:06 UTC
+Architectures: aarch64
+Components: main
+Description: OpenCode for Android/Termux
+MD5Sum:
+  970dca0e5b8f25ea7f849b596c0c138c              713 main/binary-aarch64/Packages
+  70d4a76efd370547444280f6a2d3188c              480 main/binary-aarch64/Packages.gz
+  5e9160b30f486e16c013b8ffa17a3317              544 main/binary-aarch64/Packages.xz
+SHA1:
+  fc73089db9b58ab238161965d2fd56be428b865a              713 main/binary-aarch64/Packages
+  2a4ad24e2e9a6fa1f294e1a377502ad25ac31f90              480 main/binary-aarch64/Packages.gz
+  47af496d12a8cd5e892bd5763d894f71bde59dde              544 main/binary-aarch64/Packages.xz
+SHA256:
+  05f6ac68eb3376ab70808ca3c37b168f744182e378af0a9ec69423efb1997be8              713 main/binary-aarch64/Packages
+  37007a01d74362e79477887e4d5a61701e03ef57d5e0ba198bc2dbad73798f45              480 main/binary-aarch64/Packages.gz
+  c6b4535dec3615ce674876cadfe916b7d4801f735e94f2a4a41cf1892ea232f1              544 main/binary-aarch64/Packages.xz

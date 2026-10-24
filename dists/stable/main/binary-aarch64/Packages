@@ -1,0 +1,20 @@
+Package: opencode2
+Version: 2.1.4-1
+Architecture: aarch64
+Maintainer: opencode-android <noreply@example.com>
+Installed-Size: 224448
+Depends: ripgrep, libc++
+Conflicts: opencode, opencode1
+Replaces: opencode, opencode1
+Section: utils
+Priority: optional
+Homepage: https://github.com/anomalyco/opencode
+Description: OpenCode AI coding assistant for Android/Termux
+ Pure Android/aarch64 build of upstream OpenCode, installs side by side
+ as opencode2 (never touches v1 opencode).
+Filename: pool/main/opencode2/opencode2_2.1.4-1_aarch64.deb
+Size: 68865892
+MD5sum: 9aa36d00e3f84787836a15874f42d2ca
+SHA1: 68588ddd62cadf42507174f2aeffac80d70a3bb3
+SHA256: 7b7aabb5da0776ec9f0b6f7e6b9d97da3492cdfbd8f2bc264b058157ee7cc237
+
