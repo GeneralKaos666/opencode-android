@@ -36,15 +36,38 @@ repl1 = ('function getCurrentNodeAssetTarget() {\n'
          '  if (process.platform === "android") '
          'return { platform: "linux", arch: process.arch, libc: "musl" };\n'
          '  const libc = process.env.OPENTUI_LIBC;')
-assert src.count(anchor1) == 1, "anchor1 (getCurrentNodeAssetTarget) not found"
-src = src.replace(anchor1, repl1)
+if src.count(anchor1) == 1:
+    src = src.replace(anchor1, repl1)
+elif src.count('if (process.platform === "android")') == 0:
+    anchor1b = ('function getCurrentNodeAssetTarget() {\n'
+                '  const libc = process.env.OPENTUI_LIBC;\n'
+                '  if (process.platform === "linux"')
+    repl1b = ('function getCurrentNodeAssetTarget() {\n'
+              '  if (process.platform === "android") '
+              'return { platform: "linux", arch: process.arch, libc: "musl" };\n'
+              '  const libc = process.env.OPENTUI_LIBC;\n'
+              '  if (process.platform === "linux"')
+    assert src.count(anchor1b) == 1, "anchor1 (getCurrentNodeAssetTarget) not found"
+    src = src.replace(anchor1b, repl1b)
+else:
+    print("already patched (android check)")
+    open(path, "w").write(src)
+    sys.exit(0)
 
 anchor2 = ('  if (process.platform === "linux") {\n'
            '    if (process.arch === "x64") {')
 repl2 = ('  if (process.platform === "linux" || process.platform === "android") {\n'
          '    if (process.arch === "x64") {')
-assert src.count(anchor2) == 1, "anchor2 (resolveNativeLibraryPath) not found"
-src = src.replace(anchor2, repl2)
+if src.count(anchor2) == 1:
+    src = src.replace(anchor2, repl2)
+elif src.count('process.platform === "linux" || process.platform === "android"') == 0:
+    anchor2b = ('  if (process.platform === "linux") {')
+    repl2b = ('  if (process.platform === "linux" || process.platform === "android") {')
+    # Only replace the first occurrence in resolveNativeLibraryPath context
+    if src.count(anchor2b) >= 1:
+        src = src.replace(anchor2b, repl2b, 1)
+else:
+    pass
 
 open(path, "w").write(src)
 print(f"patched {path}")
