@@ -21,3 +21,6 @@ node_modules/
 .cargo/
 /zig-cache/
 /.cache/
+
+# Local agent instructions (kept per-machine, not committed)
+/AGENTS.md

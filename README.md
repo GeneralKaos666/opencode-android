@@ -1,7 +1,7 @@
 # opencode-android
 
-[![latest release](https://img.shields.io/github/v/release/astreele/opencode-android)](https://github.com/astreele/opencode-android/releases)
-[![weekly build](https://github.com/astreele/opencode-android/actions/workflows/build-weekly.yml/badge.svg)](https://github.com/astreele/opencode-android/actions/workflows/build-weekly.yml)
+[![latest release](https://img.shields.io/github/v/release/GeneralKaos666/opencode-android)](https://github.com/GeneralKaos666/opencode-android/releases)
+[![weekly build](https://github.com/GeneralKaos666/opencode-android/actions/workflows/build-weekly.yml/badge.svg)](https://github.com/GeneralKaos666/opencode-android/actions/workflows/build-weekly.yml)
 
 Pure Android/aarch64 builds of upstream OpenCode, for native Termux.
 Installs as `opencode2`; the installer also links `opencode` → `opencode2`,
@@ -23,7 +23,7 @@ from just `opencode` — no `opencode2` name, no symlink.
   `aarch64`; there is no 32-bit build).
 - **~500 MB free** while installing (~200 MB once installed: the
   single-binary build plus its `ripgrep`/`libc++` dependencies).
-- **Network access** to `opencode-android-apt.psmsword148.workers.dev`
+- **Network access** to `opencode-android-apt.YOUR-ACCOUNT.workers.dev`
   (package repository), `raw.githubusercontent.com` and `github.com`
   (installer/key fallback), plus your provider's API endpoints at runtime.
 - No root needed. The installer fetches its own dependencies (`curl`;
@@ -32,7 +32,7 @@ from just `opencode` — no `opencode2` name, no symlink.
 ## Installation
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/astreele/opencode-android/master/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/GeneralKaos666/opencode-android/master/install.sh)
 ```
 
 Then:
@@ -43,7 +43,7 @@ opencode        # TUI
 ```
 
 The installer registers the signed APT repository
-(`https://opencode-android-apt.psmsword148.workers.dev`), installs the `opencode2`
+(`https://opencode-android-apt.YOUR-ACCOUNT.workers.dev`), installs the `opencode2`
 package with the system package manager (linking `opencode` → `opencode2`),
 and verifies with `opencode2 --version`. Later updates arrive through
 `pkg upgrade`, like any other program.
@@ -53,7 +53,7 @@ and verifies with `opencode2 --version`. Later updates arrive through
 Append options to the command:
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/astreele/opencode-android/master/install.sh) --cmd opencode
+bash <(curl -fsSL https://raw.githubusercontent.com/GeneralKaos666/opencode-android/master/install.sh) --cmd opencode
 ```
 
 | Option | Effect |
@@ -113,9 +113,9 @@ pkg upgrade            # updates opencode2 together with everything else
 Manual setup (if you ever need to redo it by hand — the installer does this):
 
 ```sh
-curl -fsSL https://opencode-android-apt.psmsword148.workers.dev/opencode-android.gpg \
+curl -fsSL https://opencode-android-apt.YOUR-ACCOUNT.workers.dev/opencode-android.gpg \
   -o "$PREFIX/etc/apt/trusted.gpg.d/opencode-android.gpg"
-echo "deb https://opencode-android-apt.psmsword148.workers.dev stable main" \
+echo "deb https://opencode-android-apt.YOUR-ACCOUNT.workers.dev stable main" \
   > "$PREFIX/etc/apt/sources.list.d/opencode-android.list"
 pkg update
 pkg install opencode2

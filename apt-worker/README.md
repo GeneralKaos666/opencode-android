@@ -14,7 +14,7 @@ worker's own domain serves the whole repository from a single `deb` line.
 
 ## Deploy (one time, maintainer) — DONE
 
-Live at `https://opencode-android-apt.psmsword148.workers.dev` (deployed
+Live at `https://opencode-android-apt.YOUR-ACCOUNT.workers.dev` (deployed
 via `wrangler deploy` from this directory; redeploy the same way after any
 `worker.js` change).
 

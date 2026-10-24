@@ -1,4 +1,4 @@
-# Gap analysis: `Astreele/opencode-android` vs `Hope2333/opencode-termux`
+# Gap analysis: `GeneralKaos666/opencode-android` vs `Hope2333/opencode-termux`
 
 Date: 2026-10-07 · Method: full local tree inspection (23 tracked files, 25 commits) vs
 remote tree API (367 files, 369 commits, branch `native-android`) + raw file fetches of
