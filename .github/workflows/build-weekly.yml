@@ -240,7 +240,7 @@ jobs:
           cd upstream || exit
           bun install --os="*" --cpu="*"
           if ! ls -d node_modules/.bun/@opentui+core-linux-arm64-musl@*/node_modules/@opentui/core-linux-arm64-musl 2>/dev/null; then
-            TUIVER=$(python3 -c "import json; print(json.load(open('packages/core/package.json'))['dependencies']['@opentui/core'])")
+            TUIVER=$(python3 -c "import json; print(json.load(open('package.json'))['workspaces']['catalog']['@opentui/core'])" 2>/dev/null || python3 -c "import json; print(json.load(open('packages/cli/package.json'))['dependencies'].get('@opentui/core','0.6.8'))")
             echo "bun skipped opentui musl package; fetching @opentui/core-linux-arm64-musl@$TUIVER"
             mkdir -p node_modules/@opentui/core-linux-arm64-musl
             curl -fsSL "https://registry.npmjs.org/@opentui/core-linux-arm64-musl/-/core-linux-arm64-musl-${TUIVER}.tgz" | \
