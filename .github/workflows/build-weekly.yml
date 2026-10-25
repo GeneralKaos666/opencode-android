@@ -55,6 +55,8 @@ jobs:
           fi
           PKG=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/package.json")
           CORE=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/packages/core/package.json")
+          OPENTUI_VER=$(echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); c=d.get('workspaces',{}).get('catalog',{}); print(c.get('@opentui/core') or '0.6.8')" 2>/dev/null || echo "0.6.8")
+          echo "opentui_version=$OPENTUI_VER" >> "$GITHUB_OUTPUT"
           if [ "$EVENT" = "workflow_dispatch" ]; then
             # manual trigger = force rebuild, even if the release exists
             SHOULD_BUILD=true
@@ -78,7 +80,7 @@ jobs:
             echo "upstream_tag=$TAG"
             echo "version_suffix=${INPUT_SUFFIX:-1}"
             echo "release_tag=${TAG}-android"
-            echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); print('opentui_version='+d['workspaces']['catalog']['@opentui/core']); print('bun_version='+d['packageManager'].split('@')[1])"
+            echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); print('bun_version='+d['packageManager'].split('@')[1])"
             echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin); print('pty_version='+d['dependencies']['@opencode-ai/pty']); print('bun_pty_version='+d['dependencies']['bun-pty'])"
             echo "should_build=$SHOULD_BUILD"
             echo "reset=$RESET"
@@ -208,6 +210,15 @@ jobs:
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
           python3 scripts/patch-opentui-loader.py upstream
+
+      - name: Patch opentui FFI pointers for ARM64 (keep BigInt)
+        # aarch64 native handles can exceed JS 2**53; stock @opentui/core 0.6.8
+        # coerces them to numbers and throws "Pointer exceeds safe integer
+        # range" in createContext/Tui.run. Bun FFI accepts bigint pointers, so
+        # keep them as bigint instead of coercing to a number.
+        run: |
+          export PATH="$HOME/.bun/bin:$PATH"
+          python3 scripts/patch-opentui-ffi-pointer.py upstream
 
       - name: Ensure vendors (stage cached, build missing, commit back)
         # Always runs: verifies + stages the vendored natives into out/, builds
