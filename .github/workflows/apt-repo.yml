@@ -111,7 +111,7 @@ jobs:
             found=0
             for tag in $tags; do
               case "$tag" in
-                *-android)
+                *-android|*-android-r[0-9]*)
                   if gh release download "$tag" --repo "$REPO" --pattern '*.deb' --clobber 2>/dev/null; then
                     found=$((found + 1))
                   else

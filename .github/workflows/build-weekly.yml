@@ -33,6 +33,7 @@ jobs:
       upstream_tag: ${{ steps.ver.outputs.upstream_tag }}
       version_suffix: ${{ steps.ver.outputs.version_suffix }}
       release_tag: ${{ steps.ver.outputs.release_tag }}
+      release_name: ${{ steps.ver.outputs.release_name }}
       should_build: ${{ steps.ver.outputs.should_build }}
       reset: ${{ steps.ver.outputs.reset }}
       opentui_version: ${{ steps.ver.outputs.opentui_version }}
@@ -57,19 +58,26 @@ jobs:
           CORE=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/packages/core/package.json")
           OPENTUI_VER=$(echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); c=d.get('workspaces',{}).get('catalog',{}); print(c.get('@opentui/core') or '0.6.8')" 2>/dev/null || echo "0.6.8")
           echo "opentui_version=$OPENTUI_VER" >> "$GITHUB_OUTPUT"
+          SUFFIX="${INPUT_SUFFIX:-1}"
+          # One release per package revision: revision 1 keeps the bare tag,
+          # later rebuilds get a -rN suffix so -1/-2/-N never share a release.
+          RELEASE_TAG="${TAG}-android"
+          if [ "$SUFFIX" != "1" ]; then
+            RELEASE_TAG="${TAG}-android-r${SUFFIX}"
+          fi
           if [ "$EVENT" = "workflow_dispatch" ]; then
             # manual trigger = force rebuild, even if the release exists
             SHOULD_BUILD=true
-            if gh release view "${TAG}-android" >/dev/null 2>&1; then
+            if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
               RESET=true
-              echo "manual run: will delete existing release ${TAG}-android first"
+              echo "manual run: will delete existing release $RELEASE_TAG first"
             else
               RESET=false
             fi
-          elif gh release view "${TAG}-android" >/dev/null 2>&1; then
+          elif gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             SHOULD_BUILD=false
             RESET=false
-            echo "release ${TAG}-android already exists, skipping"
+            echo "release $RELEASE_TAG already exists, skipping"
           else
             SHOULD_BUILD=true
             RESET=false
@@ -78,8 +86,9 @@ jobs:
           # step outputs atomic.
           {
             echo "upstream_tag=$TAG"
-            echo "version_suffix=${INPUT_SUFFIX:-1}"
-            echo "release_tag=${TAG}-android"
+            echo "version_suffix=$SUFFIX"
+            echo "release_tag=$RELEASE_TAG"
+            echo "release_name=OpenCode ${TAG} for Termux (rev ${SUFFIX})"
             echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); print('bun_version='+d['packageManager'].split('@')[1])"
             echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin); print('pty_version='+d['dependencies']['@opencode-ai/pty']); print('bun_pty_version='+d['dependencies']['bun-pty'])"
             echo "should_build=$SHOULD_BUILD"
@@ -359,9 +368,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.resolve.outputs.release_tag }}
-          name: OpenCode ${{ needs.resolve.outputs.upstream_tag }} for Termux
+          name: ${{ needs.resolve.outputs.release_name }}
           body: |
-            Pure Android/aarch64 build of upstream OpenCode `${{ needs.resolve.outputs.upstream_tag }}`.
+            Pure Android/aarch64 build of upstream OpenCode `${{ needs.resolve.outputs.upstream_tag }}`, package revision `${{ needs.resolve.outputs.version_suffix }}`.
             Installs as `opencode2`; the installer links `opencode` → `opencode2` (v2 becomes default).
             Built weekly from https://github.com/anomalyco/opencode (see `docs/REPORT.md`).
           files: |
