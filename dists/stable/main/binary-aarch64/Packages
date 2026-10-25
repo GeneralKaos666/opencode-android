@@ -33,8 +33,8 @@ Description: OpenCode AI coding assistant for Android/Termux
  Pure Android/aarch64 build of upstream OpenCode, installs side by side
  as opencode2 (never touches v1 opencode).
 Filename: pool/main/opencode2/opencode2_2.1.4-2_aarch64.deb
-Size: 68590468
-MD5sum: 169b74aee7e09ad54fe5e7b595d1c946
-SHA1: 212f39fb011147973fcd1e9c3f30208292149901
-SHA256: c8a1ced940bc4d420f7fd8411e0fc31b4ce619e5f7256244c36c859d53dfa326
+Size: 68590746
+MD5sum: 0fb1a1d2cdea7bd9435d1d77b9788f7b
+SHA1: 199a6136053beca0bc7fe09bc2140e4a6cb52be4
+SHA256: 5566eb0565667bf2a2330ab10d653701347926abfd98f618a38eeaf365ca6c6a
 
