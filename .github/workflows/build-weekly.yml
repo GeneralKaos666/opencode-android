@@ -45,6 +45,9 @@ jobs:
         id: ver
         env:
           GH_TOKEN: ${{ github.token }}
+          # resolve has no checkout, so gh cannot infer the repo from a git
+          # remote; GH_REPO makes `gh release view` work without one.
+          GH_REPO: ${{ github.repository }}
           INPUT_TAG: ${{ inputs.upstream_tag }}
           INPUT_SUFFIX: ${{ inputs.version_suffix }}
           EVENT: ${{ github.event_name }}
