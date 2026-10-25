@@ -239,10 +239,18 @@ Nothing was installed."
 install_zip() {
     echo "[1] Resolving latest release..."
 
-    API="https://api.github.com/repos/${REPO}/releases/latest"
+    # Pick the highest-version *-android release rather than GitHub's "latest"
+    # (which tracks creation date: a rev-1 rebuild would shadow a newer rev-N).
+    # Tags look like v2.1.4-android (rev 1) or v2.1.4-android-r2 (rev 2); sort -V
+    # orders upstream version first, then revision, so tail picks the newest.
+    API="https://api.github.com/repos/${REPO}/releases?per_page=100"
 
     TAG=$(curl -fsSL "$API" |
-        awk -F'"' '/"tag_name"/ {print $4; exit}')
+        grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"[^"]+"' |
+        cut -d '"' -f 4 |
+        grep -E '^v[0-9][0-9.]*-android(-r[0-9]+)?$' |
+        sort -V |
+        tail -n 1)
 
     if [ -z "$TAG" ]; then
         die "could not resolve latest release"

@@ -53,11 +53,34 @@ teardown() {
 }
 
 @test "fails when the latest release cannot be resolved" {
-    printf '{ }\n' > "$FIXTURE_DIR/latest.json"
+    printf '[]\n' > "$FIXTURE_DIR/releases.json"
 
     run_install_zip
     assert_failure
     assert_contains "$output" "could not resolve latest release"
+}
+
+@test "--zip resolves the highest version and revision across releases" {
+    make_good_release
+    # Higher upstream version beats a higher revision of an older version
+    # (v2.1.5 > v2.1.4-r10), and within a version the higher revision wins
+    # (v2.1.4-r2 > v2.1.4).
+    printf '[ { "tag_name": "v2.1.4-android-r10" }, { "tag_name": "v2.1.4-android" }, { "tag_name": "v2.1.5-android" }, { "tag_name": "v2.1.4-android-r2" } ]\n' \
+        > "$FIXTURE_DIR/releases.json"
+
+    run_install_zip
+    assert_success
+    assert_contains "$output" "TAG=v2.1.5-android"
+}
+
+@test "--zip prefers a higher revision of the same version" {
+    make_good_release
+    printf '[ { "tag_name": "v2.1.4-android" }, { "tag_name": "v2.1.4-android-r2" } ]\n' \
+        > "$FIXTURE_DIR/releases.json"
+
+    run_install_zip
+    assert_success
+    assert_contains "$output" "TAG=v2.1.4-android-r2"
 }
 
 @test "rejects a checksum mismatch and installs nothing" {

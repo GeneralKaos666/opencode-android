@@ -20,7 +20,7 @@ HOST_SH="#!$(command -v sh)"
 # Default fake release. install.sh greps release assets for
 # "<anything>android<anything>aarch64<anything>.zip", so the decoys below must
 # contain android but never aarch64.
-FIXTURE_TAG="v2.0.99"
+FIXTURE_TAG="v2.0.99-android"
 FIXTURE_ZIP="opencode2-v2.0.99-android-aarch64.zip"
 
 # ── sandbox ────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ serve() {
     if [ -n "$out" ]; then cat "$1" > "$out"; else cat "$1"; fi
 }
 case "$url" in
-    *releases/latest*)        serve "$FIXTURE_DIR/latest.json" ;;
+    *per_page*)               serve "$FIXTURE_DIR/releases.json" ;;
     *releases/tags/*)         serve "$FIXTURE_DIR/release.json" ;;
     *opencode-android.gpg*)   [ -f "$FIXTURE_DIR/opencode-android.gpg" ] || exit 22
                               serve "$FIXTURE_DIR/opencode-android.gpg" ;;
@@ -125,10 +125,11 @@ write_noop_stub() {
 }
 
 # ── fixtures ───────────────────────────────────────────────────────────
-# release JSON with the aarch64 asset (pass "" to omit it) + matching latest.json.
+# release list JSON (releases?per_page=100) with the aarch64 asset (pass "" to
+# omit it) + the single-release detail JSON used for asset listing.
 make_release_fixture() {
     local zip="${1-$FIXTURE_ZIP}"
-    printf '{ "tag_name": "%s" }\n' "$FIXTURE_TAG" > "$FIXTURE_DIR/latest.json"
+    printf '[ { "tag_name": "%s" } ]\n' "$FIXTURE_TAG" > "$FIXTURE_DIR/releases.json"
     {
         printf '{\n "tag_name": "%s",\n "assets": [\n' "$FIXTURE_TAG"
         printf '  { "name": "opencode2-2.0.99-android-armv7.zip" },\n'
