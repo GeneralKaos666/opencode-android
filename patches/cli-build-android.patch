@@ -1,5 +1,5 @@
 diff --git a/packages/cli/script/build.ts b/packages/cli/script/build.ts
-index a84cb54..f8ce830 100755
+index ee39d67..f568655 100755
 --- a/packages/cli/script/build.ts
 +++ b/packages/cli/script/build.ts
 @@ -1,6 +1,7 @@
@@ -7,10 +7,10 @@ index a84cb54..f8ce830 100755
  
  import { $ } from "bun"
 +import { existsSync } from "node:fs"
+ import { createHash } from "node:crypto"
  import { mkdir, rm } from "fs/promises"
  import path from "path"
- import { Script } from "@opencode/script"
-@@ -37,7 +38,7 @@ const releaseAssets = new Map<string, Promise<Map<string, string>>>()
+@@ -40,7 +41,7 @@ const modelsSnapshot = modelsSnapshotPlugin(await bundledModelsSnapshot())
  const allTargets: {
    os: string
    arch: "arm64" | "x64"
@@ -19,7 +19,7 @@ index a84cb54..f8ce830 100755
    avx2?: false
  }[] = [
    { os: "linux", arch: "arm64" },
-@@ -46,6 +47,7 @@ const allTargets: {
+@@ -49,6 +50,7 @@ const allTargets: {
    { os: "linux", arch: "arm64", abi: "musl" },
    { os: "linux", arch: "x64", abi: "musl" },
    { os: "linux", arch: "x64", abi: "musl", avx2: false },
@@ -27,7 +27,7 @@ index a84cb54..f8ce830 100755
    { os: "darwin", arch: "arm64" },
    { os: "darwin", arch: "x64" },
    { os: "darwin", arch: "x64", avx2: false },
-@@ -140,12 +142,19 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
+@@ -143,12 +145,19 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
        )
      },
    }
@@ -49,10 +49,11 @@ index a84cb54..f8ce830 100755
          loader: "js",
        }))
      },
-@@ -196,8 +205,12 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
+@@ -199,9 +208,12 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
+       OPENCODE_ARTIFACT: `'cli'`,
        ...(highlights ? { OPENCODE_RELEASE_HIGHLIGHTS: JSON.stringify(highlights) } : {}),
        OPENCODE_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
-       // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
+-      // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
 -      FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
 -      ...(item.os === "linux" ? { "process.env.OPENTUI_LIBC": JSON.stringify(item.abi ?? "glibc") } : {}),
 +      // Android (bionic) uses musl-static fff build; glibc binary cannot run on Android.
@@ -64,7 +65,7 @@ index a84cb54..f8ce830 100755
      },
    })
  
-@@ -307,3 +320,19 @@ function targetName(item: (typeof allTargets)[number]) {
+@@ -330,3 +342,19 @@ function targetName(item: (typeof allTargets)[number]) {
      .filter(Boolean)
      .join("-")
  }

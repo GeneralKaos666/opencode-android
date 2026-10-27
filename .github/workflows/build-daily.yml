@@ -342,7 +342,7 @@ jobs:
           export PATH="$HOME/.bun/bin:$PATH"
           export BUN_COMPILE_RELEASE OPENCODE_VERSION OPENCODE_CHANNEL
           cd upstream/packages/cli || exit
-          bun run script/build.ts --target=opencode-linux-arm64-android --skip-install --skip-web-ui --outdir="$GITHUB_WORKSPACE/dist/cli"
+          OPENCODE_TARGET=linux-arm64-android bun run script/build.ts --skip-install --skip-web-ui --outdir="$GITHUB_WORKSPACE/dist/cli"
           ls -lh "$GITHUB_WORKSPACE/dist/cli/cli-linux-arm64-android/bin/opencode"
 
       - name: Free disk (node_modules, caches, archives)
