@@ -50,7 +50,7 @@ jobs:
       APT_POOL_MODE: pool
     steps:
       - name: Checkout packaging scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: src
 

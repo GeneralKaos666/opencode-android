@@ -90,7 +90,7 @@ jobs:
       FORCE: ${{ inputs.force }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install host deps
         run: sudo apt-get update && sudo apt-get install -y wget unzip xz-utils binutils
@@ -150,7 +150,7 @@ jobs:
         run: bash scripts/build-vendors.sh --commit
 
       - name: Upload staged natives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vendors-${{ needs.resolve.outputs.opentui_version }}-${{ needs.resolve.outputs.pty_version }}-${{ needs.resolve.outputs.bun_pty_version }}
           path: out/*

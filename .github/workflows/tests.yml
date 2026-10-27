@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install test dependencies
         run: sudo apt-get update && sudo apt-get install -y bats zip unzip xz-utils binutils shellcheck
@@ -27,6 +27,6 @@ jobs:
           if command -v actionlint >/dev/null 2>&1; then
             actionlint
           else
-            curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.4/actionlint_1.7.4_linux_amd64.tar.gz | tar xz -C /tmp actionlint
+            curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz | tar xz -C /tmp actionlint
             /tmp/actionlint
           fi

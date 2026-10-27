@@ -115,7 +115,7 @@ jobs:
       BUN_COMPILE_RELEASE: bun-v${{ needs.resolve.outputs.bun_version }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Reset existing release (manual force rebuild)
         if: needs.resolve.outputs.reset == 'true'
@@ -362,13 +362,13 @@ jobs:
         run: bash scripts/package.sh
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ needs.resolve.outputs.release_tag }}
           path: out/*
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.resolve.outputs.release_tag }}
           name: ${{ needs.resolve.outputs.release_name }}
