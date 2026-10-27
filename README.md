@@ -1,7 +1,7 @@
 # opencode-android
 
 [![latest release](https://img.shields.io/github/v/release/GeneralKaos666/opencode-android)](https://github.com/GeneralKaos666/opencode-android/releases)
-[![weekly build](https://github.com/GeneralKaos666/opencode-android/actions/workflows/build-weekly.yml/badge.svg)](https://github.com/GeneralKaos666/opencode-android/actions/workflows/build-weekly.yml)
+[![build](https://github.com/GeneralKaos666/opencode-android/actions/workflows/build-daily.yml/badge.svg)](https://github.com/GeneralKaos666/opencode-android/actions/workflows/build-daily.yml)
 
 Pure Android/aarch64 builds of upstream OpenCode, for native Termux.
 Installs as `opencode2`; the installer also links `opencode` → `opencode2`,
@@ -252,7 +252,7 @@ is the manual counterpart.
 
 The full native build (upstream clone → patches → Zig/NDK renderer +
 cargo/NDK PTY natives → Bun compile → package → release) runs in CI on
-Linux x86_64 — see [`.github/workflows/build-weekly.yml`](.github/workflows/build-weekly.yml).
+Linux x86_64 — see [`.github/workflows/build-daily.yml`](.github/workflows/build-daily.yml).
 To reproduce it by hand you need Zig 0.16, Android NDK r28b, Rust with the
 `aarch64-linux-android` target, and the Bun version pinned per release;
 `vendor/` caches the resulting natives per version so repeat builds skip

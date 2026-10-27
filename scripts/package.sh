@@ -17,7 +17,7 @@ UPSTREAM_TAG="${UPSTREAM_TAG:?set UPSTREAM_TAG, e.g. v2.0.24}"
 VER="${UPSTREAM_TAG#v}"
 # Debian/pacman revision: rebuilding the same upstream tag with new patches
 # bumps this (2.0.24-1 -> 2.0.24-2) so apt/pacman see a newer version.
-# CI passes the build-weekly `version_suffix` input here; without it the
+# CI passes the build-daily `version_suffix` input here; without it the
 # rebuilt .deb would carry the same version and `pkg upgrade` would (rightly)
 # offer nothing.
 VERSION_SUFFIX="${VERSION_SUFFIX:-1}"

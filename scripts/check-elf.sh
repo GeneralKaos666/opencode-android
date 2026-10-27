@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Shared ELF gate for shipped Android artifacts.
 #
-# Used inline by .github/workflows/build-weekly.yml (so the gates are one
+# Used inline by .github/workflows/build-daily.yml (so the gates are one
 # reviewable file instead of shell snippets in YAML) and re-runnable from the
 # tests (tests/vendor.bats) or by hand:
 #

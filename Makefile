@@ -1,6 +1,6 @@
 # Local build entry for opencode-android.
 #
-# Full native builds run in CI (.github/workflows/build-weekly.yml, Linux
+# Full native builds run in CI (.github/workflows/build-daily.yml, Linux
 # x86_64 + Zig + NDK + Rust + Bun); this Makefile reproduces every stage that
 # runs locally: tests, lint, vendor checks, and packaging from a prebuilt
 # CLI binary. See "Building from source" in README.md.

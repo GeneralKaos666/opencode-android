@@ -5,7 +5,7 @@ name: build-vendors
 # back to vendor/. Manual dispatch only — pick which natives to build and
 # whether to rebuild them even when cached.
 #
-# The release workflow (build-weekly.yml) invokes scripts/build-vendors.sh
+# The release workflow (build-daily.yml) invokes scripts/build-vendors.sh
 # itself for cache misses; this workflow is the manual counterpart for new
 # native versions and forced rebuilds.
 on:

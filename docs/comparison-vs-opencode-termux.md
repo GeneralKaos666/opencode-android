@@ -18,7 +18,7 @@ of age.
 | Tracked files | **23** (16 non-vendor) | **367** (274 excl. `.omo/`) | — |
 | Docs | **1** (`docs/REPORT.md`, 7.8 KB) | **49** docs files (~300 KB) + `docs/README.md` index | 38× |
 | Tests | **0** | **17** files: 5 `.bats` suites, golden fixtures (`report.json` + `expected.sha256` per version), `tests/run.sh`, CI job | none |
-| CI workflows | **1** (`build-weekly.yml`) | **4** + `.github/ACTIONS_DISABLED.md` scope policy | no test/lint job |
+| CI workflows | **1** (`build-daily.yml`) | **4** + `.github/ACTIONS_DISABLED.md` scope policy | no test/lint job |
 | Local build entry | **none** (scripts are CI-only) | 969-line `Makefile` (`make build-native VER=…`) + `tools/make-opencode` | can't rebuild locally |
 | Releases | 1 tag, 4 assets | rolling `Push*` tags, **~360 assets in newest 5 releases** | 1 version vs 22 |
 | v2 versions shipped | `2.0.24` only | `2.0.1`–`2.0.22` (v1: `1.18.30`–`.34`) | no backfill |
@@ -93,7 +93,7 @@ of age.
 > `scripts/check-elf.sh` so they are assertable and re-runnable locally.
 
 5. **Zero automated tests.** No `tests/`, no test job in the workflow (grep confirms the
-   only `test` in `build-weekly.yml` is the Bun version assertion, line 181). Their setup:
+   only `test` in `build-daily.yml` is the Bun version assertion, line 181). Their setup:
    `tests/unit/*.bats` (5 suites), golden regression (`tests/transplant/test_golden.py`
    with pinned `report.json`/`expected.sha256` fixtures), `tests/run.sh`, and a
    `tests.yml` job on every push/PR. Even without their scale, add:
@@ -178,7 +178,7 @@ of age.
 
 ## 5. P3 — breadth & community (age-driven; sequence after P0–P2)
 
-14. **One version, one family, one arch.** You ship only the newest `v2.*` weekly; they
+14. **One version, one family, one arch.** You ship only the newest `v2.*`; they
     backfill every `2.0.x` (22 versions), keep a v1 maintenance line, and offer
     native/wrapper/compressed variants (their compressed line is ~56 MB vs your ~74 MB
     zip — meaningful on low-storage devices). They also run an armv7 prebuild line
@@ -208,7 +208,7 @@ of age.
   no sidecar `.so`, no `LD_PRELOAD`, no patchelf) vs their multi-line
   wrapper/transplant/seccomp-shim zoo.
 - **Hard CI gates:** `readelf`/`nm` assertions that glibc-isms never leak into the
-  shipped libs (`build-weekly.yml:325–357`), vendored natives with `.sha256` +
+  shipped libs (`build-daily.yml:325–357`), vendored natives with `.sha256` +
   self-committing cache — they have nothing equivalent.
 - **One-page narrative:** `docs/REPORT.md` is a genuinely good architecture document;
   their docs are 300 KB of accreted runbooks, some only in Chinese, and mix generated

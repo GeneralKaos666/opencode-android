@@ -1,6 +1,6 @@
 # Golden + ELF-gate tests for the vendored Android natives in vendor/.
 # The golden checksum pins what CI committed; check-elf.sh is the same gate
-# build-weekly.yml runs inline during builds.
+# build-daily.yml runs inline during builds.
 
 load helpers
 

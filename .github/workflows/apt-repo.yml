@@ -6,7 +6,7 @@ name: apt-repo
 # later updates arrive through `pkg upgrade` like any other program.
 #
 # Triggering: releases cut with GITHUB_TOKEN never fire downstream
-# `release: published` events, so build-weekly.yml dispatches this workflow
+# `release: published` events, so build-daily.yml dispatches this workflow
 # explicitly with the fresh tag after Create release. Manual dispatch works
 # too (empty tag = every *-android release; reset recreates the branch).
 #

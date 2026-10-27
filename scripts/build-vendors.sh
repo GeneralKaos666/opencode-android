@@ -3,7 +3,7 @@
 # build from source with scripts/build-*-ci.sh, then stage results into out/.
 #
 # This is the vendor build separated from the main build: the release workflow
-# invokes it for cache misses (see build-weekly.yml), and
+# invokes it for cache misses (see build-daily.yml), and
 # .github/workflows/build-vendors.yml exposes it via manual workflow_dispatch
 # (pick vendors, force rebuilds). `make vendors` runs the local path.
 #

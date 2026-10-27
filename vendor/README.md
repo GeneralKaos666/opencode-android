@@ -2,7 +2,7 @@
 
 `libopentui-<version>-android-aarch64.so`: true bionic builds produced once
 (see `../scripts/build-libopentui-ci.sh` + the original CI logs), then reused
-by every weekly build for that opentui version.
+by every build for that opentui version.
 
 To support a new `@opentui/core` version: build it with
 `scripts/build-vendors.sh --vendors libopentui --commit`
@@ -21,7 +21,7 @@ Swapped into the `@opencode-ai/pty-linux-arm64-musl` npm slot pre-build.
 `librust_pty_arm64.so` pre-build (no source change needed: the loader picks
 that filename for arm64, including Android).
 
-Lib selection order in the weekly workflow: `scripts/build-vendors.sh` uses the
+Lib selection order in the build workflow: `scripts/build-vendors.sh` uses the
 vendored file when present (verified by `.sha256`) and builds from source
 otherwise, committing the result straight back to `vendor/` (same job, no
 loop: the release workflow has no push trigger). So a new pty/bun-pty version
