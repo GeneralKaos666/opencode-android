@@ -8,7 +8,7 @@
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-OPENTUI_VERSION="${OPENTUI_VERSION:-0.6.8}"
+OPENTUI_VERSION="${OPENTUI_VERSION:-0.7.0}"
 ANDROID_API="${ANDROID_API:-29}"
 NDK_DIR="${NDK_DIR:-/opt/android-ndk}"
 WORK="${WORK:-$REPO_ROOT/work}"

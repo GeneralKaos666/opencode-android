@@ -14,15 +14,15 @@
 #   --force     rebuild even when the vendor files exist (also: FORCE=1)
 #   --commit    git add/commit/push rebuilt vendor files (CI; default: off)
 #   --vendors   all (default), libopentui, pty, or comma combos (also: VENDORS=)
-# Env: REPO_ROOT, OUT, WORK, OPENTUI_VERSION (0.5.17), PTY_VERSION (0.2.0),
+# Env: REPO_ROOT, OUT, WORK, OPENTUI_VERSION (0.7.0), PTY_VERSION (0.3.1),
 #      BUN_PTY_VERSION (0.4.11), NDK_DIR (/opt/android-ndk), ANDROID_API (29).
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 OUT="${OUT:-$REPO_ROOT/out}"
 WORK="${WORK:-$REPO_ROOT/work}"
-OPENTUI_VERSION="${OPENTUI_VERSION:-0.6.8}"
-PTY_VERSION="${PTY_VERSION:-0.2.0}"
+OPENTUI_VERSION="${OPENTUI_VERSION:-0.7.0}"
+PTY_VERSION="${PTY_VERSION:-0.3.1}"
 BUN_PTY_VERSION="${BUN_PTY_VERSION:-0.4.11}"
 NDK_DIR="${NDK_DIR:-/opt/android-ndk}"
 ANDROID_API="${ANDROID_API:-29}"

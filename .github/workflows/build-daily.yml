@@ -59,7 +59,7 @@ jobs:
           fi
           PKG=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/package.json")
           CORE=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/packages/core/package.json")
-          OPENTUI_VER=$(echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); c=d.get('workspaces',{}).get('catalog',{}); print(c.get('@opentui/core') or '0.6.8')" 2>/dev/null || echo "0.6.8")
+          OPENTUI_VER=$(echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); c=d.get('workspaces',{}).get('catalog',{}); print(c.get('@opentui/core') or '0.7.0')" 2>/dev/null || echo "0.7.0")
           echo "opentui_version=$OPENTUI_VER" >> "$GITHUB_OUTPUT"
           SUFFIX="${INPUT_SUFFIX:-1}"
           # One release per package revision: revision 1 keeps the bare tag,
@@ -224,7 +224,7 @@ jobs:
           python3 scripts/patch-opentui-loader.py upstream
 
       - name: Patch opentui FFI pointers for ARM64 (keep BigInt)
-        # aarch64 native handles can exceed JS 2**53; stock @opentui/core 0.6.8
+        # aarch64 native handles can exceed JS 2**53; stock @opentui/core 0.7.0
         # coerces them to numbers and throws "Pointer exceeds safe integer
         # range" in createContext/Tui.run. Bun FFI accepts bigint pointers, so
         # keep them as bigint instead of coercing to a number.
@@ -263,7 +263,7 @@ jobs:
           cd upstream || exit
           bun install --os="*" --cpu="*"
           if ! ls -d node_modules/.bun/@opentui+core-linux-arm64-musl@*/node_modules/@opentui/core-linux-arm64-musl 2>/dev/null; then
-            TUIVER=$(python3 -c "import json; print(json.load(open('package.json'))['workspaces']['catalog']['@opentui/core'])" 2>/dev/null || python3 -c "import json; print(json.load(open('packages/cli/package.json'))['dependencies'].get('@opentui/core','0.6.8'))")
+            TUIVER=$(python3 -c "import json; print(json.load(open('package.json'))['workspaces']['catalog']['@opentui/core'])" 2>/dev/null || python3 -c "import json; print(json.load(open('packages/cli/package.json'))['dependencies'].get('@opentui/core','0.7.0'))")
             echo "bun skipped opentui musl package; fetching @opentui/core-linux-arm64-musl@$TUIVER"
             mkdir -p node_modules/@opentui/core-linux-arm64-musl
             curl -fsSL "https://registry.npmjs.org/@opentui/core-linux-arm64-musl/-/core-linux-arm64-musl-${TUIVER}.tgz" | \

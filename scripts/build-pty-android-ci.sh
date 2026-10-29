@@ -11,7 +11,7 @@
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-PTY_VERSION="${PTY_VERSION:-0.2.0}"
+PTY_VERSION="${PTY_VERSION:-0.3.1}"
 BUN_PTY_VERSION="${BUN_PTY_VERSION:-0.4.11}"
 ANDROID_API="${ANDROID_API:-29}"
 NDK_DIR="${NDK_DIR:-/opt/android-ndk}"
