@@ -12,7 +12,7 @@ setup() {
 
 # Versions matching the files committed under vendor/.
 vendored_env() {
-    export OPENTUI_VERSION=0.5.16 PTY_VERSION=0.2.0 BUN_PTY_VERSION=0.4.9
+    export OPENTUI_VERSION=0.5.16 BUN_PTY_VERSION=0.4.9
 }
 
 @test "--plan reports no builds needed when the cache is warm" {
@@ -38,7 +38,7 @@ vendored_env() {
     assert_contains "$output" "need_libopentui=false"
 }
 
-@test "cache-hit run stages all three natives into out/ and touches nothing else" {
+@test "cache-hit run stages both natives into out/ and touches nothing else" {
     vendored_env
     run env OUT="$SCRATCH/out" WORK="$SCRATCH/work" \
         bash "$REPO_ROOT/scripts/build-vendors.sh"
@@ -46,8 +46,9 @@ vendored_env() {
     assert_contains "$output" "libopentui=vendored"
     assert_contains "$output" "pty=vendored"
     assert_file_exists "$SCRATCH/out/libopentui.so"
-    assert_file_exists "$SCRATCH/out/opencode-pty"
     assert_file_exists "$SCRATCH/out/librust_pty_arm64.so"
+    # The pty daemon comes from upstream's npm platform package, not vendor/.
+    assert_file_absent "$SCRATCH/out/opencode-pty"
 }
 
 @test "--vendors libopentui stages only the renderer" {

@@ -14,21 +14,20 @@
 #   --force     rebuild even when the vendor files exist (also: FORCE=1)
 #   --commit    git add/commit/push rebuilt vendor files (CI; default: off)
 #   --vendors   all (default), libopentui, pty, or comma combos (also: VENDORS=)
-# Env: REPO_ROOT, OUT, WORK, OPENTUI_VERSION (0.7.0), PTY_VERSION (0.3.1),
-#      BUN_PTY_VERSION (0.4.11), NDK_DIR (/opt/android-ndk), ANDROID_API (29).
+# Env: REPO_ROOT, OUT, WORK, OPENTUI_VERSION (0.7.0), BUN_PTY_VERSION (0.4.11),
+#      NDK_DIR (/opt/android-ndk), ANDROID_API (29).
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 OUT="${OUT:-$REPO_ROOT/out}"
 WORK="${WORK:-$REPO_ROOT/work}"
 OPENTUI_VERSION="${OPENTUI_VERSION:-0.7.0}"
-PTY_VERSION="${PTY_VERSION:-0.3.1}"
 BUN_PTY_VERSION="${BUN_PTY_VERSION:-0.4.11}"
 NDK_DIR="${NDK_DIR:-/opt/android-ndk}"
 ANDROID_API="${ANDROID_API:-29}"
 VENDORS="${VENDORS:-all}"
 FORCE="${FORCE:-0}"
-export REPO_ROOT OUT WORK OPENTUI_VERSION PTY_VERSION BUN_PTY_VERSION
+export REPO_ROOT OUT WORK OPENTUI_VERSION BUN_PTY_VERSION
 export NDK_DIR ANDROID_API
 
 PLAN=0
@@ -79,7 +78,6 @@ fi
 
 # Vendor file names (relative to REPO_ROOT) and their staged out/ names.
 LIB_FILE="vendor/libopentui-${OPENTUI_VERSION}-android-aarch64.so"
-PTY_BIN="vendor/opencode-pty-${PTY_VERSION}-android-aarch64"
 RUSTPTY_SO="vendor/librust_pty-${BUN_PTY_VERSION}-android-aarch64.so"
 
 missing_lib() {
@@ -87,7 +85,7 @@ missing_lib() {
 }
 
 missing_pty() {
-    [ "$FORCE" = 1 ] || [ ! -f "$REPO_ROOT/$PTY_BIN" ] || [ ! -f "$REPO_ROOT/$RUSTPTY_SO" ]
+    [ "$FORCE" = 1 ] || [ ! -f "$REPO_ROOT/$RUSTPTY_SO" ]
 }
 
 # --plan: report whether a source build would be needed (CI gates the heavy
@@ -119,16 +117,11 @@ require_lib_toolchain() {
 
 require_pty_toolchain() {
     command -v cargo >/dev/null 2>&1 || {
-        echo "cargo missing (needed to build pty natives ${PTY_VERSION}/${BUN_PTY_VERSION} from source)" >&2
-        exit 1
-    }
-    # opencode-pty's build.rs shells out to `zig build` (ghostty vt parser).
-    command -v zig >/dev/null 2>&1 || {
-        echo "zig missing (needed to build pty natives ${PTY_VERSION}/${BUN_PTY_VERSION} from source: opencode-pty vendors ghostty via zig)" >&2
+        echo "cargo missing (needed to build librust_pty ${BUN_PTY_VERSION} from source)" >&2
         exit 1
     }
     test -x "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${ANDROID_API}-clang" || {
-        echo "no NDK clang at $NDK_DIR (needed to build pty natives from source)" >&2
+        echo "no NDK clang at $NDK_DIR (needed to build librust_pty from source)" >&2
         exit 1
     }
 }
@@ -154,19 +147,16 @@ ensure_lib() {
 
 ensure_pty() {
     if ! missing_pty; then
-        (cd "$REPO_ROOT/vendor" && sha256sum -c "$(basename "$PTY_BIN").sha256" "$(basename "$RUSTPTY_SO").sha256")
-        cp -v "$REPO_ROOT/$PTY_BIN" "$OUT/opencode-pty"
+        (cd "$REPO_ROOT/vendor" && sha256sum -c "$(basename "$RUSTPTY_SO").sha256")
         cp -v "$REPO_ROOT/$RUSTPTY_SO" "$OUT/librust_pty_arm64.so"
-        echo "pty ${PTY_VERSION} + rust_pty ${BUN_PTY_VERSION}: vendored"
+        echo "rust_pty ${BUN_PTY_VERSION}: vendored"
         return 0
     fi
     require_pty_toolchain
-    echo "pty ${PTY_VERSION} + rust_pty ${BUN_PTY_VERSION}: no vendored files, building from source"
-    bash "$REPO_ROOT/scripts/build-pty-android-ci.sh"
-    bash "$REPO_ROOT/scripts/check-elf.sh" --no-glibc --no-musl --no-errno-location --arch aarch64 "$OUT/opencode-pty" "$OUT/librust_pty_arm64.so"
-    cp -v "$OUT/opencode-pty" "$REPO_ROOT/$PTY_BIN"
+    echo "rust_pty ${BUN_PTY_VERSION}: no vendored file, building from source"
+    bash "$REPO_ROOT/scripts/build-rust-pty-android-ci.sh"
+    bash "$REPO_ROOT/scripts/check-elf.sh" --no-glibc --no-musl --no-errno-location --arch aarch64 "$OUT/librust_pty_arm64.so"
     cp -v "$OUT/librust_pty_arm64.so" "$REPO_ROOT/$RUSTPTY_SO"
-    (cd "$REPO_ROOT/vendor" && sha256sum "$(basename "$PTY_BIN")" > "$(basename "$PTY_BIN").sha256")
     (cd "$REPO_ROOT/vendor" && sha256sum "$(basename "$RUSTPTY_SO")" > "$(basename "$RUSTPTY_SO").sha256")
     BUILT_PTY=1
 }
@@ -187,11 +177,11 @@ if [ "$COMMIT" = 1 ] && { [ "$BUILT_LIB" = 1 ] || [ "$BUILT_PTY" = 1 ]; }; then
         fi
     fi
     if [ "$BUILT_PTY" = 1 ]; then
-        git -C "$REPO_ROOT" add "$PTY_BIN" "$PTY_BIN.sha256" "$RUSTPTY_SO" "$RUSTPTY_SO.sha256"
-        if git -C "$REPO_ROOT" commit -m "vendor pty ${PTY_VERSION} + rust_pty ${BUN_PTY_VERSION} android-aarch64 (CI-built)"; then
+        git -C "$REPO_ROOT" add "$RUSTPTY_SO" "$RUSTPTY_SO.sha256"
+        if git -C "$REPO_ROOT" commit -m "vendor rust_pty ${BUN_PTY_VERSION} android-aarch64 (CI-built)"; then
             COMMITTED=1
         else
-            echo "nothing to commit for pty ${PTY_VERSION} + rust_pty ${BUN_PTY_VERSION}"
+            echo "nothing to commit for rust_pty ${BUN_PTY_VERSION}"
         fi
     fi
     if [ "$COMMITTED" = 1 ]; then

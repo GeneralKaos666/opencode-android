@@ -1,9 +1,10 @@
 name: build-vendors
 
 # Standalone vendor build: (re)build the Android natives
-# (libopentui, opencode-pty, librust_pty), verify them, and commit the result
-# back to vendor/. Manual dispatch only — pick which natives to build and
-# whether to rebuild them even when cached.
+# (libopentui, librust_pty), verify them, and commit the result back to
+# vendor/. Manual dispatch only — pick which natives to build and whether to
+# rebuild them even when cached. The opencode-pty daemon is embedded from
+# upstream's published musl platform package and is not built here.
 #
 # The release workflow (build-daily.yml) invokes scripts/build-vendors.sh
 # itself for cache misses; this workflow is the manual counterpart for new
@@ -28,10 +29,6 @@ on:
         description: 'libopentui version (empty = resolve from upstream_tag, else 0.7.0)'
         required: false
         default: ''
-      pty_version:
-        description: 'opencode-pty version (empty = resolve from upstream_tag, else 0.3.1)'
-        required: false
-        default: ''
       bun_pty_version:
         description: 'bun-pty version (empty = resolve from upstream_tag, else 0.4.11)'
         required: false
@@ -51,7 +48,6 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       opentui_version: ${{ steps.ver.outputs.opentui_version }}
-      pty_version: ${{ steps.ver.outputs.pty_version }}
       bun_pty_version: ${{ steps.ver.outputs.bun_pty_version }}
     steps:
       - name: Resolve native versions
@@ -60,21 +56,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ inputs.upstream_tag }}
           INPUT_OPENTUI: ${{ inputs.opentui_version }}
-          INPUT_PTY: ${{ inputs.pty_version }}
           INPUT_BUN_PTY: ${{ inputs.bun_pty_version }}
         run: |
           if [ -n "$INPUT_TAG" ]; then
             PKG=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${INPUT_TAG}/package.json")
             CORE=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${INPUT_TAG}/packages/core/package.json")
             OPENTUI_V=$(echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['workspaces']['catalog']['@opentui/core'])")
-            PTY_V=$(echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dependencies']['@opencode-ai/pty'])")
-            BUN_PTY_V=$(echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dependencies']['bun-pty'])")
+            BUN_PTY_V=$(echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin).get('dependencies',{}).get('bun-pty','')")
           fi
           # Single grouped write (SC2129). Explicit inputs win, then the
           # upstream resolution, then the currently-vendored versions.
           {
             echo "opentui_version=${INPUT_OPENTUI:-${OPENTUI_V:-0.7.0}}"
-            echo "pty_version=${INPUT_PTY:-${PTY_V:-0.3.1}}"
             echo "bun_pty_version=${INPUT_BUN_PTY:-${BUN_PTY_V:-0.4.11}}"
           } >> "$GITHUB_OUTPUT"
 
@@ -84,7 +77,6 @@ jobs:
     timeout-minutes: 120
     env:
       OPENTUI_VERSION: ${{ needs.resolve.outputs.opentui_version }}
-      PTY_VERSION: ${{ needs.resolve.outputs.pty_version }}
       BUN_PTY_VERSION: ${{ needs.resolve.outputs.bun_pty_version }}
       VENDORS: ${{ inputs.vendors }}
       FORCE: ${{ inputs.force }}
@@ -112,9 +104,8 @@ jobs:
           df -h / /tmp
 
       - name: Install Zig
-        # opencode-pty's build.rs also needs zig (it builds ghostty's vt
-        # parser via `zig build`), so install it for pty builds too.
-        if: steps.plan.outputs.need_libopentui == 'true' || steps.plan.outputs.need_pty == 'true'
+        # Renderer only: libopentui is built from source with zig (NDK sysroot).
+        if: steps.plan.outputs.need_libopentui == 'true'
         run: |
           cd /tmp || exit
           wget -q "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" -O zig.tar.xz
@@ -152,6 +143,6 @@ jobs:
       - name: Upload staged natives
         uses: actions/upload-artifact@v7
         with:
-          name: vendors-${{ needs.resolve.outputs.opentui_version }}-${{ needs.resolve.outputs.pty_version }}-${{ needs.resolve.outputs.bun_pty_version }}
+          name: vendors-${{ needs.resolve.outputs.opentui_version }}-${{ needs.resolve.outputs.bun_pty_version }}
           path: out/*
           if-no-files-found: warn

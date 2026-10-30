@@ -117,13 +117,25 @@ Android prebuilds (npm registry + `greadelf`: node-pty needs `libc.so.6`,
 Both natives are cargo+NDK cross-compiled in CI and vendored under `vendor/`
 like libopentui. Node-pty SEA path stays unused (Bun binary only).
 
+Update (upstream v2.2.2): the daemon moved out of `anomalyco/opencode-pty`
+into the monorepo (`packages/process-daemon`, published as `@opencode/pty`)
+and now honours `OPENCODE_PTY_SOCKET_DIR`. Its published
+`@opencode/pty-linux-arm64-musl` build is a static aarch64 binary that runs on
+bionic (verified on-device), so it is embedded as-is;
+`patches/daemon-pty-socket-android.patch` makes the CLI point the daemon's
+socket root at `$TMPDIR`. No daemon cross-compile happens anymore, and
+`scripts/build-pty-android-ci.sh` became `scripts/build-rust-pty-android-ci.sh`
+(librust_pty only). The legacy `opencode-pty-*` vendor binaries remain for
+`workflow_dispatch` rebuilds of pre-`0.3.3` tags, whose daemons still hardcode
+`/tmp`.
+
 ## 5. Maintenance
 
 `.github/workflows/build-daily.yml` runs twice daily at 06:00 & 18:00 UTC (plus manual):
 resolve latest `v2.*` → skip if release exists → pin host Bun from upstream
 `packageManager` + pty/bun-pty versions from `packages/core/package.json` →
 verify Bun android base exists → clone/patch/install → patch loader →
-build lib (Zig 0.16 + NDK r28) + build pty (cargo + NDK r28) → verify bionic
+build lib (Zig 0.16 + NDK r28) + build librust_pty (cargo + NDK r28) → verify bionic
 (no `__errno_location`, no `libc.so.6`) → package zip/deb/pacman + SHA256SUMS
 → release.
 Known future breakage: opentui chunk rewrites (loader patch asserts anchors),

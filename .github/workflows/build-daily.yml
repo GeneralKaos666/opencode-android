@@ -38,6 +38,7 @@ jobs:
       reset: ${{ steps.ver.outputs.reset }}
       opentui_version: ${{ steps.ver.outputs.opentui_version }}
       bun_version: ${{ steps.ver.outputs.bun_version }}
+      pty_package: ${{ steps.ver.outputs.pty_package }}
       pty_version: ${{ steps.ver.outputs.pty_version }}
       bun_pty_version: ${{ steps.ver.outputs.bun_pty_version }}
     steps:
@@ -60,6 +61,21 @@ jobs:
           PKG=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/package.json")
           CORE=$(curl -fsSL "https://raw.githubusercontent.com/${REPO_UPSTREAM}/${TAG}/packages/core/package.json")
           OPENTUI_VER=$(echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); c=d.get('workspaces',{}).get('catalog',{}); print(c.get('@opentui/core') or '0.7.0')" 2>/dev/null || echo "0.7.0")
+          # The PTY daemon moved from @opencode-ai/pty (separate repo) to
+          # @opencode/pty (monorepo) in upstream v2.2.2; accept both and let the
+          # platform package name follow. Missing keys must fail with a readable
+          # message, not a bare KeyError traceback.
+          PTY_NAME=$(echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin).get('dependencies',{}); print(next((p for p in ('@opencode/pty','@opencode-ai/pty') if p in d), ''))")
+          PTY_VER=$(echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin).get('dependencies',{}); print(d.get('$PTY_NAME',''))")
+          BUN_PTY_VER=$(echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin).get('dependencies',{}); print(d.get('bun-pty',''))")
+          if [ -z "$PTY_NAME" ] || [ -z "$PTY_VER" ]; then
+            echo "packages/core/package.json declares no @opencode/pty (or legacy @opencode-ai/pty)" >&2
+            exit 1
+          fi
+          if [ -z "$BUN_PTY_VER" ]; then
+            echo "packages/core/package.json declares no bun-pty" >&2
+            exit 1
+          fi
           echo "opentui_version=$OPENTUI_VER" >> "$GITHUB_OUTPUT"
           SUFFIX="${INPUT_SUFFIX:-1}"
           # One release per package revision: revision 1 keeps the bare tag,
@@ -93,7 +109,9 @@ jobs:
             echo "release_tag=$RELEASE_TAG"
             echo "release_name=OpenCode ${TAG} for Termux (rev ${SUFFIX})"
             echo "$PKG" | python3 -c "import json,sys; d=json.load(sys.stdin); print('bun_version='+d['packageManager'].split('@')[1])"
-            echo "$CORE" | python3 -c "import json,sys; d=json.load(sys.stdin); print('pty_version='+d['dependencies']['@opencode-ai/pty']); print('bun_pty_version='+d['dependencies']['bun-pty'])"
+            echo "pty_package=$PTY_NAME"
+            echo "pty_version=$PTY_VER"
+            echo "bun_pty_version=$BUN_PTY_VER"
             echo "should_build=$SHOULD_BUILD"
             echo "reset=$RESET"
           } >> "$GITHUB_OUTPUT"
@@ -108,6 +126,7 @@ jobs:
       RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
       OPENTUI_VERSION: ${{ needs.resolve.outputs.opentui_version }}
       BUN_VERSION: ${{ needs.resolve.outputs.bun_version }}
+      PTY_PACKAGE: ${{ needs.resolve.outputs.pty_package }}
       PTY_VERSION: ${{ needs.resolve.outputs.pty_version }}
       BUN_PTY_VERSION: ${{ needs.resolve.outputs.bun_pty_version }}
       OPENCODE_VERSION: ${{ needs.resolve.outputs.upstream_tag }}-android-termux.${{ needs.resolve.outputs.version_suffix }}
@@ -143,16 +162,14 @@ jobs:
         id: vendors
         env:
           OPENTUI_VERSION: ${{ needs.resolve.outputs.opentui_version }}
-          PTY_VERSION: ${{ needs.resolve.outputs.pty_version }}
           BUN_PTY_VERSION: ${{ needs.resolve.outputs.bun_pty_version }}
         run: |
           mkdir -p out
           bash scripts/build-vendors.sh --plan >> "$GITHUB_OUTPUT"
 
       - name: Install Zig
-        # opencode-pty's build.rs also needs zig (it builds ghostty's vt
-        # parser via `zig build`), so install it for pty builds too.
-        if: steps.vendors.outputs.need_libopentui == 'true' || steps.vendors.outputs.need_pty == 'true'
+        # Renderer only: libopentui is built from source with zig (NDK sysroot).
+        if: steps.vendors.outputs.need_libopentui == 'true'
         run: |
           cd /tmp || exit
           wget -q "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" -O zig.tar.xz
@@ -205,6 +222,8 @@ jobs:
           git apply ../patches/watcher-android.patch
           git apply --check ../patches/tui-thinking-tap-android.patch
           git apply ../patches/tui-thinking-tap-android.patch
+          git apply --check ../patches/daemon-pty-socket-android.patch
+          git apply ../patches/daemon-pty-socket-android.patch
 
       - name: Install JS deps
         run: |
@@ -246,7 +265,7 @@ jobs:
         # room (workerd/darwin/win prebuilds). Final cleanup repeats this.
         if: steps.vendors.outputs.need_pty == 'true'
         run: |
-          rm -rf work/opencode-pty-*/target work/bun-pty-*/rust-pty/target ~/.cargo/registry/cache
+          rm -rf work/bun-pty-*/rust-pty/target ~/.cargo/registry/cache
           rm -f /tmp/ndk.zip /tmp/zig.tar.xz
           df -h / /tmp
 
@@ -283,14 +302,16 @@ jobs:
           fi
           ls -d node_modules/.bun/@parcel+watcher-android-arm64@*/node_modules/@parcel/watcher-android-arm64 2>/dev/null || \
             ls -d node_modules/@parcel/watcher-android-arm64
-          if ! ls -d node_modules/.bun/@opencode-ai+pty-linux-arm64-musl@*/node_modules/@opencode-ai/pty-linux-arm64-musl 2>/dev/null; then
-            echo "bun skipped pty musl package; fetching @opencode-ai/pty-linux-arm64-musl@$PTY_VERSION"
-            mkdir -p node_modules/@opencode-ai/pty-linux-arm64-musl
-            curl -fsSL "https://registry.npmjs.org/@opencode-ai/pty-linux-arm64-musl/-/pty-linux-arm64-musl-${PTY_VERSION}.tgz" | \
-              tar xz -C node_modules/@opencode-ai/pty-linux-arm64-musl --strip-components=1
+          PTY_MUSL="${PTY_PACKAGE}-linux-arm64-musl"
+          PTY_SLUG="${PTY_MUSL/\//+}"
+          if ! ls -d node_modules/.bun/"${PTY_SLUG}"@*/node_modules/"$PTY_MUSL" 2>/dev/null; then
+            echo "bun skipped pty musl package; fetching ${PTY_MUSL}@$PTY_VERSION"
+            mkdir -p "node_modules/$PTY_MUSL"
+            curl -fsSL "https://registry.npmjs.org/${PTY_MUSL}/-/${PTY_MUSL#*/}-${PTY_VERSION}.tgz" | \
+              tar xz -C "node_modules/$PTY_MUSL" --strip-components=1
           fi
-          ls -d node_modules/.bun/@opencode-ai+pty-linux-arm64-musl@*/node_modules/@opencode-ai/pty-linux-arm64-musl 2>/dev/null || \
-            ls -d node_modules/@opencode-ai/pty-linux-arm64-musl
+          ls -d node_modules/.bun/"${PTY_SLUG}"@*/node_modules/"$PTY_MUSL" 2>/dev/null || \
+            ls -d "node_modules/$PTY_MUSL"
           ls node_modules/.bun/bun-pty@*/node_modules/bun-pty/rust-pty/target/release/librust_pty_arm64.so 2>/dev/null || \
             ls node_modules/bun-pty/rust-pty/target/release/librust_pty_arm64.so
 
@@ -308,21 +329,34 @@ jobs:
           cp -v out/libopentui.so "$MUSL_PKG/libopentui.so"
           bash scripts/check-elf.sh --no-errno-location "$MUSL_PKG/libopentui.so"
 
-      - name: Swap CI android PTY natives into embed slots
-        # Daemon binary: android build goes into the linux-arm64-musl npm slot,
-        # which resolveOpencodePty maps android->musl to (same trick as libopentui).
-        # Inline lib: android cdylib overwrites bun-pty's glibc librust_pty_arm64.so,
-        # which Bun's compile-time require picks for arm64 (no source change needed).
+      - name: Swap CI natives into embed slots
+        # Inline lib: the bionic cdylib overwrites bun-pty's glibc
+        # librust_pty_arm64.so, which Bun's compile-time require picks for arm64
+        # (no source change needed).
+        # Daemon: the platform package resolves through the patched
+        # resolveOpencodePty (android -> linux-arm64-musl). Upstream's 0.3.3
+        # musl static binary runs on bionic and honours
+        # OPENCODE_PTY_SOCKET_DIR (set from TMPDIR by our daemon patch), so it
+        # is embedded as-is. Older tags whose daemon hardcoded /tmp (<= 0.3.1)
+        # get the matching vendored, TMPDIR-patched binary instead.
         run: |
-          PTY_PKG=$(ls -d upstream/node_modules/.bun/@opencode-ai+pty-linux-arm64-musl@*/node_modules/@opencode-ai/pty-linux-arm64-musl 2>/dev/null || \
-            ls -d upstream/node_modules/@opencode-ai/pty-linux-arm64-musl)
+          PTY_MUSL="${PTY_PACKAGE}-linux-arm64-musl"
+          PTY_SLUG="${PTY_MUSL/\//+}"
+          PTY_PKG=$(ls -d upstream/node_modules/.bun/"${PTY_SLUG}"@*/node_modules/"$PTY_MUSL" 2>/dev/null || \
+            ls -d "upstream/node_modules/$PTY_MUSL")
           if [ -z "$PTY_PKG" ] || [ ! -f "$PTY_PKG/bin/opencode-pty" ]; then
             echo "missing pty musl pkg" >&2
-            find upstream/node_modules/@opencode-ai -maxdepth 1 -print 2>/dev/null | head -10
+            find "upstream/node_modules/${PTY_PACKAGE%%/*}" -maxdepth 1 -print 2>/dev/null | head -10
             exit 1
           fi
-          cp -v out/opencode-pty "$PTY_PKG/bin/opencode-pty"
-          chmod 755 "$PTY_PKG/bin/opencode-pty"
+          LEGACY_DAEMON="vendor/opencode-pty-${PTY_VERSION}-android-aarch64"
+          if [ -f "$LEGACY_DAEMON" ]; then
+            cp -v "$LEGACY_DAEMON" "$PTY_PKG/bin/opencode-pty"
+            chmod 755 "$PTY_PKG/bin/opencode-pty"
+            echo "embedded vendored android daemon ${PTY_VERSION}"
+          else
+            echo "embedding upstream ${PTY_MUSL}@${PTY_VERSION} daemon as-is"
+          fi
           RUSTPTY_DST=$(ls upstream/node_modules/.bun/bun-pty@*/node_modules/bun-pty/rust-pty/target/release/librust_pty_arm64.so 2>/dev/null || \
             ls upstream/node_modules/bun-pty/rust-pty/target/release/librust_pty_arm64.so)
           if [ -z "$RUSTPTY_DST" ]; then
@@ -352,7 +386,7 @@ jobs:
           df -h / /tmp
           rm -rf upstream/node_modules upstream/.git dist/cli/.bun \
             /tmp/zig.tar.xz /tmp/ndk.zip ~/.bun/install/cache ~/.cache/zig \
-            work/opencode-pty-*/target work/bun-pty-*/rust-pty/target ~/.cargo/registry/cache
+            work/bun-pty-*/rust-pty/target ~/.cargo/registry/cache
           df -h / /tmp
 
       - name: Package (zip, deb, pacman)

@@ -1,0 +1,24 @@
+diff --git a/packages/core/src/persistent-pty/daemon.ts b/packages/core/src/persistent-pty/daemon.ts
+index 21bcaab..fa4e451 100644
+--- a/packages/core/src/persistent-pty/daemon.ts
++++ b/packages/core/src/persistent-pty/daemon.ts
+@@ -231,10 +231,18 @@ export const makeDaemonTransport = Effect.fn("PersistentPty.makeDaemonTransport"
+     const child = yield* Effect.tryPromise({
+       try: () =>
+         new Promise<ReturnType<typeof spawn>>((resolve, reject) => {
++          // Android/Termux has no writable /tmp; the daemon roots its
++          // control socket there unless OPENCODE_PTY_SOCKET_DIR is set.
++          const socketDir = process.env.OPENCODE_PTY_SOCKET_DIR ?? process.env.TMPDIR
+           const child = spawn(
+             executable,
+             ["daemon", "--runtime-dir", root, "--name", id],
+-            { detached: true, windowsHide: true, stdio: "ignore" },
++            {
++              detached: true,
++              windowsHide: true,
++              stdio: "ignore",
++              env: socketDir ? { ...process.env, OPENCODE_PTY_SOCKET_DIR: socketDir } : process.env,
++            },
+           )
+           child.once("spawn", () => {
+             child.unref()

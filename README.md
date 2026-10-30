@@ -183,10 +183,13 @@ created only when upstream moved.
   (source builds run only when a new opentui version has no vendored lib —
   see `vendor/README.md`). No android asset exists upstream, so the musl
   slot + loader mapping is the only embedding path (by design).
-- PTY: `opencode-pty` daemon + `librust_pty` cdylib cross-compiled for
-  bionic with cargo + NDK r28 (**vendored per version**, swapped into the
-  musl/bun-pty slots pre-build). Daemon carries the `TMPDIR` socket patch
-  (`/tmp` is not writable on Android). Wrapper sets `LD_LIBRARY_PATH`
+- PTY: the `opencode-pty` daemon is upstream's static musl build
+  (`@opencode/pty-linux-arm64-musl`, embedded through the android→musl
+  slot) — it runs on bionic, and `patches/daemon-pty-socket-android.patch`
+  points its socket root at `$TMPDIR` (`/tmp` is not writable on Android).
+  The `librust_pty` cdylib is cross-compiled with cargo + NDK r28
+  (**vendored per version**) and swapped into bun-pty's slot pre-build
+  (bun-pty ships no Android prebuild). Wrapper sets `LD_LIBRARY_PATH`
   for `libc++_shared.so`. Node-pty SEA path stays unused (Bun binary only).
 
 Full story: [`docs/REPORT.md`](docs/REPORT.md).
@@ -240,18 +243,18 @@ Vendor rebuilds (`scripts/build-vendors.sh`, also via `make vendors`) reuse
 the `vendor/` cache per native version and only build what is missing:
 
 ```sh
-make vendors VENDORS=pty FORCE=1   # rebuild pty natives (needs cargo + NDK)
+make vendors VENDORS=pty FORCE=1   # rebuild librust_pty (needs cargo + NDK)
 ```
 
 Rebuilding from source needs Zig 0.16 + NDK r28 (renderer) or cargo +
-NDK r28 (PTY); without `--commit` nothing is written back. Committing new
+NDK r28 (librust_pty); without `--commit` nothing is written back. Committing new
 vendor files happens in CI: the release workflow builds missing natives
 itself, and `.github/workflows/build-vendors.yml` (manual dispatch: pick
 `vendors`, set `force`, optionally resolve versions from `upstream_tag`)
 is the manual counterpart.
 
 The full native build (upstream clone → patches → Zig/NDK renderer +
-cargo/NDK PTY natives → Bun compile → package → release) runs in CI on
+cargo/NDK librust_pty → Bun compile → package → release) runs in CI on
 Linux x86_64 — see [`.github/workflows/build-daily.yml`](.github/workflows/build-daily.yml).
 To reproduce it by hand you need Zig 0.16, Android NDK r28b, Rust with the
 `aarch64-linux-android` target, and the Bun version pinned per release;
@@ -275,9 +278,10 @@ This project builds on the work of many:
   removed the need for a source-built runtime.
 - [**anomalyco/opentui**](https://github.com/anomalyco/opentui) — the TUI
   renderer; its sources cross-compile cleanly to a bionic `libopentui.so`.
-- [**anomalyco/opencode-pty**](https://github.com/anomalyco/opencode-pty)
-  and [**sursaone/bun-pty**](https://github.com/sursaone/bun-pty) — the PTY
-  daemon and `rust-pty` cdylib cross-compiled for Android.
+- [**anomalyco/opencode**](https://github.com/anomalyco/opencode) (its
+  `packages/process-daemon` crate, published as `@opencode/pty`) and
+  [**sursaone/bun-pty**](https://github.com/sursaone/bun-pty) — the PTY
+  daemon and the `rust-pty` cdylib cross-compiled for Android.
 - [**@parcel/watcher**](https://github.com/parceljs/watcher) — directory
   watching via its official `android-arm64` (inotify) binding.
 - [**ripgrep**](https://github.com/BurntSushi/ripgrep) — file finding via

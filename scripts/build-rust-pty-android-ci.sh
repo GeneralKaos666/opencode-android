@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # RUNS ON: Linux x86_64 CI runner (NOT on Termux, NOT on device).
-# Build PTY natives for Android aarch64 (Linux x86_64 CI):
-#   1. opencode-pty daemon binary (anomalyco/opencode-pty at $PTY_VERSION),
-#      with the TMPDIR socket patch (Termux /tmp is not writable).
-#   2. librust_pty cdylib (sursaone/bun-pty at $BUN_PTY_VERSION, rust-pty crate),
-#      for bun-pty inline sessions (Bun compile embeds librust_pty_arm64.so).
-# Env: REPO_ROOT (this repo), PTY_VERSION, BUN_PTY_VERSION, NDK_DIR, ANDROID_API.
-# Requires: cargo + rustup target aarch64-linux-android + NDK clang + zig
-# (opencode-pty's build.rs vendors ghostty's vt parser via `zig build`).
+# Build librust_pty (Android aarch64) for bun-pty inline sessions:
+# sursaone/bun-pty at $BUN_PTY_VERSION, rust-pty crate. Bun's compile-time
+# require embeds librust_pty_arm64.so, so the bionic build just overwrites
+# bun-pty's glibc file before the CLI build.
+#
+# The opencode-pty daemon is NOT built here anymore: upstream ships a static
+# musl platform package (@opencode/pty-linux-arm64-musl) that runs on bionic,
+# and patches/daemon-pty-socket-android.patch points its socket root at
+# $TMPDIR. vendor/opencode-pty-* remain as legacy daemons for older tags.
+#
+# Env: REPO_ROOT (this repo), BUN_PTY_VERSION, NDK_DIR, ANDROID_API.
+# Requires: cargo + rustup target aarch64-linux-android + NDK clang.
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-PTY_VERSION="${PTY_VERSION:-0.3.1}"
 BUN_PTY_VERSION="${BUN_PTY_VERSION:-0.4.11}"
 ANDROID_API="${ANDROID_API:-29}"
 NDK_DIR="${NDK_DIR:-/opt/android-ndk}"
@@ -23,9 +26,8 @@ mkdir -p "$WORK" "$OUT"
 
 command -v cargo >/dev/null || { echo "cargo missing" >&2; exit 1; }
 # NOTE: do not gate on `rustup target list` here: source checkouts may pin
-# their own toolchain via rust-toolchain.toml (opencode-pty pins 1.90.0),
-# which shadows the default toolchain the target was installed for.
-# Each build dir installs the target itself (idempotent).
+# their own toolchain via rust-toolchain.toml, which shadows the default
+# toolchain the target was installed for. The build dir installs it itself.
 
 TOOLCHAIN="$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin"
 test -x "$TOOLCHAIN/aarch64-linux-android${ANDROID_API}-clang" || \
@@ -34,31 +36,6 @@ export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$TOOLCHAIN/aarch64-linux-andro
 export CC_aarch64_linux_android="$TOOLCHAIN/aarch64-linux-android${ANDROID_API}-clang"
 export AR_aarch64_linux_android="$TOOLCHAIN/llvm-ar"
 export CFLAGS_aarch64_linux_android="--sysroot=$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
-# ghostty's android-ndk/build.zig locates the NDK via ANDROID_NDK_HOME.
-export ANDROID_NDK_HOME="$NDK_DIR"
-
-echo "==> opencode-pty v${PTY_VERSION} (daemon binary)"
-if [ ! -d "$WORK/opencode-pty-${PTY_VERSION}/.git" ]; then
-  git clone --depth 1 --branch "v${PTY_VERSION}" https://github.com/anomalyco/opencode-pty.git "$WORK/opencode-pty-${PTY_VERSION}"
-fi
-for p in opencode-pty-socket-tmpdir.patch opencode-pty-buildrs-android.patch; do
-  if git -C "$WORK/opencode-pty-${PTY_VERSION}" apply --reverse --check "$REPO_ROOT/patches/$p" 2>/dev/null; then
-    echo "$p already applied, skipping"
-  else
-    git -C "$WORK/opencode-pty-${PTY_VERSION}" apply --check "$REPO_ROOT/patches/$p"
-    git -C "$WORK/opencode-pty-${PTY_VERSION}" apply "$REPO_ROOT/patches/$p"
-  fi
-done
-# idempotent: already-applied is skipped, broken-patch is fatal (checked above)
-(
-  cd "$WORK/opencode-pty-${PTY_VERSION}"
-  rustup target add "$TARGET"
-  cargo build --release --target "$TARGET"
-)
-BIN="$WORK/opencode-pty-${PTY_VERSION}/target/$TARGET/release/opencode-pty"
-test -x "$BIN"
-cp -v "$BIN" "$OUT/opencode-pty"
-ls -lh "$OUT/opencode-pty"
 
 echo "==> bun-pty v${BUN_PTY_VERSION} (librust_pty cdylib)"
 if [ ! -d "$WORK/bun-pty-${BUN_PTY_VERSION}/.git" ]; then
@@ -88,7 +65,4 @@ if command -v readelf >/dev/null 2>&1; then READELF=readelf; else READELF=llvm-r
 if "$READELF" -d "$OUT/librust_pty_arm64.so" | grep -q "libc.so.6"; then
   echo "glibc-linked cdylib leaked into android build" >&2; exit 1
 fi
-if command -v llvm-readelf >/dev/null 2>&1; then
-  llvm-readelf -h "$OUT/opencode-pty" | grep -q "AArch64" || { echo "daemon binary is not AArch64" >&2; exit 1; }
-fi
-echo "pty android artifacts OK"
+echo "librust_pty android artifact OK"
