@@ -131,7 +131,7 @@ socket root at `$TMPDIR`. No daemon cross-compile happens anymore, and
 
 ## 5. Maintenance
 
-`.github/workflows/build-daily.yml` runs twice daily at 06:00 & 18:00 UTC (plus manual):
+`.github/workflows/build-daily.yml` runs four times daily at 00:00, 06:00, 12:00 & 18:00 UTC (plus manual):
 resolve latest `v2.*` → skip if release exists → pin host Bun from upstream
 `packageManager` + pty/bun-pty versions from `packages/core/package.json` →
 verify Bun android base exists → clone/patch/install → patch loader →
