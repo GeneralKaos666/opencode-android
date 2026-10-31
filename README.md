@@ -5,7 +5,8 @@
 
 Pure Android/aarch64 builds of upstream OpenCode, for native Termux.
 Installs as `opencode2`; the installer also links `opencode` → `opencode2`,
-so v2 becomes the default `opencode` (v1 is replaced, not kept alongside).
+so v2 becomes the default `opencode` (a dpkg-installed v1 is replaced, not
+kept alongside; a hand-installed `opencode` is left alone unless you opt in).
 Prefer a single command? Install with `--cmd opencode` and the program runs
 from just `opencode` — no `opencode2` name, no symlink.
 
@@ -38,8 +39,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/GeneralKaos666/opencode-andr
 Then:
 
 ```sh
-opencode auth   # connect a provider
-opencode        # TUI
+opencode auth login   # connect a provider
+opencode              # TUI
 ```
 
 The installer registers the signed APT repository
@@ -60,6 +61,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/GeneralKaos666/opencode-andr
 | --- | --- |
 | `--cmd opencode` | **Run from just the `opencode` command.** Installs `opencode` + `libexec/opencode/opencode.bin` only — no `opencode2` name, no symlink (uses `--zip`; the deb always ships both names). |
 | `--cmd opencode2` | Default: install `opencode2` and link `opencode` → `opencode2`. |
+| `--link` | (with `--cmd opencode2`) Create/refresh the `opencode` → `opencode2` symlink — the default. |
 | `--no-link` | Install `opencode2` but never touch an existing `$PREFIX/bin/opencode` (keeps a v1 command working; uses `--zip`). |
 | `--force` | Replace an existing `opencode` that this installer does not manage (it names the package owner if one is found). |
 | `--apt` | Force the package-manager path (default unless `--cmd opencode` / `--no-link` imply `--zip`). |
@@ -70,11 +72,18 @@ bash <(curl -fsSL https://raw.githubusercontent.com/GeneralKaos666/opencode-andr
 `--cmd` / `--force`.
 
 If `$PREFIX/bin/opencode` already exists from a hand install (not owned by
-any package) and is not managed by this installer, the default run **leaves
-it alone** and tells you: v2 stays available as `opencode2`, and you choose
-explicitly whether to take over the `opencode` command (`--force`, or
-`--cmd opencode`). A dpkg-installed v1 is removed cleanly by apt instead
-(see Migrating from v1).
+any package) and is not managed by this installer:
+
+- **Package path (default):** the installer **stops before changing
+  anything** and offers two explicit choices: `--zip --no-link` (v2 stays
+  available as `opencode2`, the old command is untouched) or `--force`
+  (take over the `opencode` command).
+- **Zip path:** it installs v2 as `opencode2`, leaves the existing
+  `opencode` alone, and notes how to take over later (`--force`, or
+  `--cmd opencode`).
+
+A dpkg-installed v1 is removed cleanly by apt instead (see Migrating from
+v1).
 
 ### Uninstall
 
@@ -133,7 +142,7 @@ pacman `.pkg.tar.xz` for direct download:
 
 ```sh
 # pacman (direct file install, not a repository)
-pacman -U ./opencode2-2.0.24-1-aarch64.pkg.tar.xz
+pacman -U ./opencode2-<ver>-<rev>-aarch64.pkg.tar.xz
 pacman -R opencode2     # uninstall (runs the remove hooks, stops the service)
 ```
 
@@ -163,13 +172,15 @@ release page. (The pacman archive is still a direct download: re-run
 
 ## Releases
 
-Built every Monday 03:00 UTC from the latest stable upstream `v2.*` tag
-(`anomalyco/opencode`), plus manual runs. Each release publishes:
+Built four times a day (00:00, 06:00, 12:00 & 18:00 UTC) from the latest
+stable upstream `v2.*` tag (`anomalyco/opencode`), plus manual runs. On
+scheduled runs a release is created only when upstream moved; a manual run
+rebuilds the chosen tag (same revision replaces its existing release). Each
+release publishes:
 `opencode2-<ver>-android-aarch64.zip`, Termux `.deb`
-(`opencode2_<ver>-1_aarch64.deb`), pacman `.pkg.tar.xz`, `SHA256SUMS`
+(`opencode2_<ver>-<rev>_aarch64.deb`), pacman `.pkg.tar.xz`, `SHA256SUMS`
 (zip-verified by the `--zip` installer). The `.deb` is additionally
-published to the APT repository, so `pkg upgrade` picks it up. A release is
-created only when upstream moved.
+published to the APT repository, so `pkg upgrade` picks it up.
 
 ## How it works
 
@@ -197,7 +208,8 @@ Full story: [`docs/REPORT.md`](docs/REPORT.md).
 ## Testing
 
 Automated tests (bats) cover the installer, packaging and the shipped
-artifacts — no device or network needed:
+artifacts — no device or upstream access needed (the runner clones a pinned
+bats-core once if `bats` is not installed):
 
 ```sh
 bash tests/run.sh                  # syntax checks + all suites
@@ -227,9 +239,9 @@ make test               # bats suite (TEST=install for one suite)
 make lint               # shellcheck (+ actionlint if installed)
 make check-vendor       # golden checksum + ELF gates for vendor/
 make vendors            # verify vendor cache, stage natives into out/
-make package UPSTREAM_TAG=v2.0.24   # zip/deb/pacman from a prebuilt CLI (SUFFIX=2 for a packaging-only rebuild)
+make package UPSTREAM_TAG=v2.2.4   # zip/deb/pacman from a prebuilt CLI (SUFFIX=2 for a packaging-only rebuild)
 make apt-repo           # signed APT repo from out/*.deb (SIGN=0 skips gpg)
-make clean              # remove work/, out/, upstream/, dist/
+make clean              # remove work/, out/, upstream/, dist/, apt-repo/
 ```
 
 `make package` needs the CI-built CLI at
@@ -282,7 +294,7 @@ This project builds on the work of many:
   `packages/process-daemon` crate, published as `@opencode/pty`) and
   [**sursaone/bun-pty**](https://github.com/sursaone/bun-pty) — the PTY
   daemon and the `rust-pty` cdylib cross-compiled for Android.
-- [**@parcel/watcher**](https://github.com/parceljs/watcher) — directory
+- [**@parcel/watcher**](https://github.com/parcel-bundler/watcher) — directory
   watching via its official `android-arm64` (inotify) binding.
 - [**ripgrep**](https://github.com/BurntSushi/ripgrep) — file finding via
   the ripgrep fallback (the fff native indexer is disabled: it segfaults
