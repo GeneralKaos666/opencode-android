@@ -64,6 +64,30 @@ EOF
 cp -f "$SRC/src/vendor/miniaudio/miniaudio.h" "$BIONIC_INC/miniaudio.h"
 cp -f "$SRC/src/yoga-bridge.h" "$BIONIC_INC/yoga-bridge.h"
 cp -f "$SRC/include/opentui.h" "$BIONIC_INC/opentui.h"
+# translate-c injects the host's system include dirs after our -I paths, and
+# bionic's limits.h does `#include_next <limits.h>` for clang's compiler
+# limits. On a glibc runner that walks into /usr/include/limits.h. Prepend
+# clang's limits.h (minus its own hosted include_next) to the merged copy so
+# the chain ends on bionic and never reaches the host libc.
+ZIG_LIB_DIR="$(zig env | sed -n 's/^ *\.lib_dir = "\(.*\)",$/\1/p')"
+test -f "$ZIG_LIB_DIR/include/limits.h" || {
+  echo "no Zig clang limits.h at $ZIG_LIB_DIR" >&2
+  exit 1
+}
+python3 - "$ZIG_LIB_DIR/include/limits.h" "$BIONIC_INC/limits.h" <<'PY'
+import sys
+
+clang = open(sys.argv[1], encoding="utf-8").read()
+clang = clang.replace(
+    "#if __STDC_HOSTED__ && __has_include_next(<limits.h>)\n"
+    "#include_next <limits.h>\n"
+    "#endif\n",
+    "",
+)
+bionic = open(sys.argv[2], encoding="utf-8").read()
+with open(sys.argv[2], "w", encoding="utf-8") as out:
+    out.write(clang + "\n" + bionic)
+PY
 ls "$BIONIC_INC/miniaudio.h" "$BIONIC_INC/yoga-bridge.h" "$BIONIC_INC/opentui.h"
 
 echo "==> zig deps"
@@ -97,10 +121,6 @@ EOF
 echo "==> zig build"
 export BIONIC_SYSROOT_INC="$BIONIC_INC"
 export ANDROID_NDK_HOME="$NDK_DIR"
-# Zig 0.17 only applies --libc to the build runner, not to the child compile
-# steps (translate-c, link); ZIG_LIBC makes every child use the bionic sysroot
-# instead of falling back to the host's glibc headers.
-export ZIG_LIBC="$WORK/android-libc.txt"
 zig build --libc "$WORK/android-libc.txt" -Dlibrary-target=aarch64-linux-android -Doptimize=ReleaseFast --summary all
 
 echo "==> install"
