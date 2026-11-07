@@ -21,7 +21,7 @@ permissions:
   actions: write # dispatch apt-repo.yml after Create release
 
 env:
-  ZIG_VERSION: 0.16.0
+  ZIG_VERSION: 0.17.0
   NDK_VERSION: r28b
   NDK_DIR: /opt/android-ndk
   REPO_UPSTREAM: anomalyco/opencode

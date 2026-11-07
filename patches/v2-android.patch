@@ -42,7 +42,7 @@ index b249205..f436d04 100644
  fn addTranslatedCImports(
      b: *std.Build,
      module: *std.Build.Module,
-     optimize: std.builtin.OptimizeMode,
+     optimize: std.lang.Optimize,
      target: std.Build.ResolvedTarget,
  ) void {
 +    const bionic_inc = bionicSysrootInclude(b);
@@ -79,7 +79,7 @@ index b249205..f436d04 100644
      module.addImport("yoga", yoga_translate.createModule());
      addContextABIHeader(b, module, optimize, target);
 @@ -435,11 +471,18 @@ fn addContextABIHeader(
-     optimize: std.builtin.OptimizeMode,
+     optimize: std.lang.Optimize,
      target: std.Build.ResolvedTarget,
  ) void {
 +    const bionic_inc = bionicSysrootInclude(b);

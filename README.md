@@ -189,7 +189,7 @@ published to the APT repository, so `pkg upgrade` picks it up.
   (watcher `android-arm64` binding, pty `android→musl` slot mapping,
   musl opentui selection, loader android→linux-musl mapping,
   `getBackend` android→inotify).
-- Renderer: `libopentui.so` cross-compiled for bionic with Zig 0.16 + NDK
+- Renderer: `libopentui.so` cross-compiled for bionic with Zig 0.17 + NDK
   r28, **vendored per version** under `vendor/` and embedded into the CLI
   (source builds run only when a new opentui version has no vendored lib —
   see `vendor/README.md`). No android asset exists upstream, so the musl
@@ -258,7 +258,7 @@ the `vendor/` cache per native version and only build what is missing:
 make vendors VENDORS=pty FORCE=1   # rebuild librust_pty (needs cargo + NDK)
 ```
 
-Rebuilding from source needs Zig 0.16 + NDK r28 (renderer) or cargo +
+Rebuilding from source needs Zig 0.17 + NDK r28 (renderer) or cargo +
 NDK r28 (librust_pty); without `--commit` nothing is written back. Committing new
 vendor files happens in CI: the release workflow builds missing natives
 itself, and `.github/workflows/build-vendors.yml` (manual dispatch: pick
@@ -268,7 +268,7 @@ is the manual counterpart.
 The full native build (upstream clone → patches → Zig/NDK renderer +
 cargo/NDK librust_pty → Bun compile → package → release) runs in CI on
 Linux x86_64 — see [`.github/workflows/build-daily.yml`](.github/workflows/build-daily.yml).
-To reproduce it by hand you need Zig 0.16, Android NDK r28b, Rust with the
+To reproduce it by hand you need Zig 0.17, Android NDK r28b, Rust with the
 `aarch64-linux-android` target, and the Bun version pinned per release;
 `vendor/` caches the resulting natives per version so repeat builds skip
 the toolchain entirely (see `vendor/README.md`).
