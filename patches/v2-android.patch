@@ -16,7 +16,7 @@ index b249205..f436d04 100644
          },
          else => {},
      }
-@@ -404,26 +407,59 @@ fn ghosttyVtAvailable(target: std.Build.ResolvedTarget) bool {
+@@ -404,26 +407,61 @@ fn ghosttyVtAvailable(target: std.Build.ResolvedTarget) bool {
      };
  }
  
@@ -54,6 +54,7 @@ index b249205..f436d04 100644
 +            b.path("src/vendor/miniaudio/miniaudio.h"),
          .target = target,
          .optimize = optimize,
++        .link_libc = bionic_inc == null,
      });
 +    if (bionic_inc) |inc| {
 +        // Merged bionic sysroot (shimmed headers inside) replaces Zig's missing bionic libc headers
@@ -71,6 +72,7 @@ index b249205..f436d04 100644
 +            b.path("src/yoga-bridge.h"),
          .target = target,
          .optimize = optimize,
++        .link_libc = bionic_inc == null,
      });
 +    if (bionic_inc) |inc| {
 +        yoga_translate.addIncludePath(.{ .cwd_relative = inc });
@@ -78,7 +80,7 @@ index b249205..f436d04 100644
      yoga_translate.addIncludePath(yoga_dep.path(""));
      module.addImport("yoga", yoga_translate.createModule());
      addContextABIHeader(b, module, optimize, target);
-@@ -435,11 +471,18 @@ fn addContextABIHeader(
+@@ -435,11 +471,19 @@ fn addContextABIHeader(
      optimize: std.lang.Optimize,
      target: std.Build.ResolvedTarget,
  ) void {
@@ -91,6 +93,7 @@ index b249205..f436d04 100644
 +            b.path("include/opentui.h"),
          .target = target,
          .optimize = optimize,
++        .link_libc = bionic_inc == null,
      });
 +    if (bionic_inc) |inc| {
 +        header.addIncludePath(.{ .cwd_relative = inc });
