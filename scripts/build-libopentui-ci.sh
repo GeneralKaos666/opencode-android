@@ -97,6 +97,10 @@ EOF
 echo "==> zig build"
 export BIONIC_SYSROOT_INC="$BIONIC_INC"
 export ANDROID_NDK_HOME="$NDK_DIR"
+# Zig 0.17 only applies --libc to the build runner, not to the child compile
+# steps (translate-c, link); ZIG_LIBC makes every child use the bionic sysroot
+# instead of falling back to the host's glibc headers.
+export ZIG_LIBC="$WORK/android-libc.txt"
 zig build --libc "$WORK/android-libc.txt" -Dlibrary-target=aarch64-linux-android -Doptimize=ReleaseFast --summary all
 
 echo "==> install"
