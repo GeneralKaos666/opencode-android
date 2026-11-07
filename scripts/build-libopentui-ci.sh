@@ -87,10 +87,11 @@ echo "CRT_DIR=$CRT_DIR"
 cat > "$WORK/android-libc.txt" <<EOF
 include_dir=$BIONIC_INC
 sys_include_dir=$BIONIC_INC
+cc_dir=$CRT_DIR
 crt_dir=$CRT_DIR
 msvc_lib_dir=
 kernel32_lib_dir=
-gcc_dir=
+darwin_sdk_dir=
 EOF
 
 echo "==> zig build"
