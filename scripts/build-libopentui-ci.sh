@@ -29,6 +29,21 @@ else
 fi
 # idempotent: already-applied is skipped, broken-patch is fatal (checked above)
 
+# opentui 0.9.4+ also installs a static archive, and its libc++ bundling step
+# (bundle-libcxx) runs zig build-lib without the NDK libc config, so it cannot
+# link for a bionic target. Android ships libopentui.so only, so drop the static
+# archive for this target. Versions without that step keep the default build.
+echo "==> android static-archive opt-out"
+SKIP_STATIC_PATCH="$REPO_ROOT/patches/opentui-android-skip-static-lib.patch"
+if git -C "$WORK/opentui-${OPENTUI_VERSION}" apply --reverse --check "$SKIP_STATIC_PATCH" 2>/dev/null; then
+  echo "skip-static-lib.patch already applied, skipping"
+elif grep -q "bundle-libcxx" "$SRC/build.zig"; then
+  git -C "$WORK/opentui-${OPENTUI_VERSION}" apply --check "$SKIP_STATIC_PATCH"
+  git -C "$WORK/opentui-${OPENTUI_VERSION}" apply "$SKIP_STATIC_PATCH"
+else
+  echo "opentui v${OPENTUI_VERSION} has no bundle-libcxx step, static archive kept"
+fi
+
 echo "==> merged bionic sysroot"
 BIONIC_INC="$WORK/bionic-include"
 NDK_SYSROOT="$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/sysroot"

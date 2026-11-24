@@ -1,0 +1,16 @@
+diff --git a/packages/native/build.zig b/packages/native/build.zig
+index 0897ad6..1976d56 100644
+--- a/packages/native/build.zig
++++ b/packages/native/build.zig
+@@ -940,7 +940,10 @@ fn buildTarget(
+     const build_step = b.step(build_step_name, try std.fmt.allocPrint(b.allocator, "Build for {s}", .{description}));
+     for (createLibraries(b, target, optimize, build_options, macos_sdk_path)) |lib| {
+         const windows = target.result.os.tag == .windows;
+-        if (lib.isStaticLibrary() and (windows or target.result.os.tag == .linux)) {
++        // Android ships libopentui.so only: the static archive carries Zig's
++        // libc++ (bundle-libcxx), and that step runs zig build-lib without the
++        // NDK libc config, so it cannot link for a bionic target.
++        if (lib.isStaticLibrary() and !target.result.abi.isAndroid() and (windows or target.result.os.tag == .linux)) {
+             // Linux has no system libc++ to count on, so the archive carries Zig's. MSVC has none of MinGW's
+             // runtime, so the Windows archive carries what of it MSVC lacks. The shared library installs the header.
+             const run = b.addRunArtifact(bundleTool(b, windows));

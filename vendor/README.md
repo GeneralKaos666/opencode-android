@@ -4,6 +4,11 @@
 (see `../scripts/build-libopentui-ci.sh` + the original CI logs), then reused
 by every build for that opentui version.
 
+`patches/opentui-android-skip-static-lib.patch` applies from opentui 0.9.4 on,
+when the source gained a `bundle-libcxx` step: that step runs `zig build-lib`
+without the NDK libc config, so it cannot link for a bionic target. Android
+ships the shared library only, so the build drops the static archive.
+
 To support a new `@opentui/core` version: build it with
 `scripts/build-vendors.sh --vendors libopentui --commit`
 (locally: without `--commit`; needs Zig 0.16 + NDK r28 — or trigger the
