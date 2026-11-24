@@ -1,24 +1,4 @@
 Package: opencode2
-Version: 2.2.7-1
-Architecture: aarch64
-Maintainer: opencode-android <noreply@example.com>
-Installed-Size: 241664
-Depends: ripgrep, libc++
-Conflicts: opencode, opencode1
-Replaces: opencode, opencode1
-Section: utils
-Priority: optional
-Homepage: https://github.com/anomalyco/opencode
-Description: OpenCode AI coding assistant for Android/Termux
- Pure Android/aarch64 build of upstream OpenCode, installs side by side
- as opencode2 (never touches v1 opencode).
-Filename: pool/main/opencode2/opencode2_2.2.7-1_aarch64.deb
-Size: 73776458
-MD5sum: 8714221aac13cbedb7f349ae7aac83a1
-SHA1: c6bc335f6a3ecface434b2e04800a75fd517b461
-SHA256: f02878400eef903499ea88975be93c6702111946ad15b4f320dabc7a8c9adb57
-
-Package: opencode2
 Version: 2.3.0-1
 Architecture: aarch64
 Maintainer: opencode-android <noreply@example.com>
@@ -77,4 +57,24 @@ Size: 74042724
 MD5sum: 79fc6e986c6d08464a7969f2bc8a2ab1
 SHA1: 8fffe3609ebe3db87633d414497dbc98bb385282
 SHA256: 59ebe3d2d6cb06712b44d2c13412cf2073d6134fa94ba773804e7d91fa9c8f1f
+
+Package: opencode2
+Version: 2.4.1-1
+Architecture: aarch64
+Maintainer: opencode-android <noreply@example.com>
+Installed-Size: 258560
+Depends: ripgrep, libc++
+Conflicts: opencode, opencode1
+Replaces: opencode, opencode1
+Section: utils
+Priority: optional
+Homepage: https://github.com/anomalyco/opencode
+Description: OpenCode AI coding assistant for Android/Termux
+ Pure Android/aarch64 build of upstream OpenCode, installs side by side
+ as opencode2 (never touches v1 opencode).
+Filename: pool/main/opencode2/opencode2_2.4.1-1_aarch64.deb
+Size: 80273074
+MD5sum: 2710ba9cb7ad7842baabda36c32d2012
+SHA1: 01cf44078460a08952bb5a876faec862941c252c
+SHA256: 7c37c81640de1d7a6f1729270b81955691f8bce26681f241c1a92d5b6de6f7f1
 
